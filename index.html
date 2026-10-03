@@ -3,26 +3,121 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Niklas König — nkoenig.studio</title>
+<title>Niklas König</title>
+<meta name="theme-color" content="#0d0d0d">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<style>
-  html,body{margin:0;height:100%;background:#111;color:#eee;font:16px/1.5 Georgia,serif}
-  main{min-height:100%;display:grid;place-items:center;text-align:center;padding:16px;box-sizing:border-box}
-  img{width:240px;height:240px;border-radius:50%;filter:grayscale(1)}
-  h1{font-weight:normal;font-size:1.6rem;margin:1rem 0 .25rem}
-  a{color:#eee}
-</style>
+<link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="press">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="worn" x="-5%" y="-8%" width="110%" height="116%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4" result="big"/>
+    <feDisplacementMap in="SourceGraphic" in2="big" scale="7" xChannelSelector="R" yChannelSelector="G" result="wob"/>
+    <feTurbulence type="fractalNoise" baseFrequency="1.15" numOctaves="2" seed="11" result="fine"/>
+    <feColorMatrix in="fine" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -3.6 0 0 0 3.15" result="holes"/>
+    <feComposite in="wob" in2="holes" operator="in" result="speck"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="edge"/>
+    <feDisplacementMap in="speck" in2="edge" scale="3.4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <symbol id="star" viewBox="0 0 100 100"><path d="M50 0 C53 34 66 47 100 50 C66 53 53 66 50 100 C47 66 34 53 0 50 C34 47 47 34 50 0Z"/></symbol>
+</svg>
+
 <main>
-  <div>
-    <img src="/icon-512.png" alt="Niklas König">
-    <h1>Niklas König</h1>
-    <p><a href="mailto:niklas@nkoenig.studio">niklas@nkoenig.studio</a></p>
+
+  <section class="hero">
+    <h1 class="name">
+      <span>Niklas</span>
+      <svg class="name-star" aria-hidden="true"><use href="#star"/></svg>
+      <span>König</span>
+    </h1>
+    <figure class="face">
+      <div class="paper"></div>
+      <div class="shot">
+        <img src="/img/ht-niklas.webp" width="1000" height="1000" alt="Niklas König">
+        <img class="real" src="/img/niklas-1000.webp" width="1000" height="1000" alt="">
+      </div>
+      <i class="tape tl"></i><i class="tape tr"></i>
+      <svg class="st c" style="width:15%;right:-10%;top:8%;--r:14deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="st o" style="width:7%;left:-9%;bottom:16%;--r:-8deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="scribble arrow" viewBox="0 0 160 170" aria-hidden="true"><path d="M8 10 C 64 14, 118 50, 130 140"/><path d="M104 126 L 131 146 L 146 114"/></svg>
+    </figure>
+  </section>
+
+  <section class="statement">
+    <h2 class="shout" aria-label="Shoot your shot">
+      <span class="l1" aria-hidden="true"><b style="--r:-4deg;--y:.03em;--w:70%">S</b><b style="--r:3deg;--y:-.05em;--w:62%">H</b><b class="chip" style="--r:-7deg;--y:.02em;--w:86%">O</b><b style="--r:2deg;--y:-.02em;--w:66%">O</b><b style="--r:-3deg;--y:.06em;--w:78%">T</b></span>
+      <span class="l2" aria-hidden="true"><i class="tape-word">your</i><b class="chip-o" style="--r:5deg;--y:-.02em;--w:72%">S</b><b style="--r:-2deg;--y:-.05em;--w:64%">H</b><b class="ol" style="--r:6deg;--y:.02em;--w:96%">O</b><b style="--r:-5deg;--y:.05em;--w:68%">T</b><svg class="shout-star"><use href="#star"/></svg></span>
+    </h2>
+    <svg class="scribble under" viewBox="0 0 600 60" preserveAspectRatio="none" aria-hidden="true"><path d="M6 34 C 90 20, 200 30, 310 18 S 520 26, 594 12"/><path d="M40 48 C 170 34, 330 44, 568 28"/></svg>
+  </section>
+
+  <div class="wall">
+
+    <!-- Schilder -->
+    <div class="pair">
+      <figure class="scrap" style="--c:2/6;--mt:20%;--r:-1.8deg"><img src="/img/svIlYNz19pQ-900.webp" srcset="/img/svIlYNz19pQ-900.webp 900w, /img/svIlYNz19pQ-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1350" loading="lazy" alt="Silhouette aus den Wörtern Liebe und Hass auf dunklem Grund"><i class="tape tl"></i><i class="tape br"></i></figure>
+      <figure class="scrap frame-o" style="--c:7/12;--r:2.4deg"><img src="/img/S_MXibn6oHI-900.webp" srcset="/img/S_MXibn6oHI-900.webp 900w, /img/S_MXibn6oHI-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1350" loading="lazy" alt="Schild mit der Aufschrift Frit Stop über Schachbrettmuster"><i class="tape t"></i></figure>
+      <svg class="st c" style="width:3.6vw;left:1%;top:6%;--r:-6deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="scribble x" style="left:44%;bottom:6%" viewBox="0 0 60 60" aria-hidden="true"><path d="M8 10 L 52 50"/><path d="M50 8 L 10 54"/></svg>
+    </div>
+
+    <!-- Dinge, die sich drehen -->
+    <div class="pair quad">
+      <figure class="scrap w" style="--c:1/9;--r:1deg"><img src="/img/wWiVD-IsDns-900.webp" srcset="/img/wWiVD-IsDns-900.webp 900w, /img/wWiVD-IsDns-1800.webp 1800w" sizes="(max-width:760px) 100vw, 62vw" width="900" height="675" loading="lazy" alt="Blaue Armbanduhr mit Metallarmband"><i class="tape tl"></i><i class="tape br"></i></figure>
+      <figure class="scrap dots-behind" style="--c:9/13;--mt:9%;--r:2.2deg"><img src="/img/lqy07Ffdkoc-900.webp" srcset="/img/lqy07Ffdkoc-900.webp 900w, /img/lqy07Ffdkoc-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1200" loading="lazy" alt="Tonbandgerät mit Spulen"><i class="tape tl"></i><i class="tape tr o"></i></figure>
+      <figure class="scrap frame-c" style="--c:2/6;--row:2;--mt:7%;--r:-2.4deg"><img src="/img/yNxP-sdPEx0-900.webp" srcset="/img/yNxP-sdPEx0-900.webp 900w, /img/yNxP-sdPEx0-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1350" loading="lazy" alt="Flugzeugpropeller im Gegenlicht, schwarzweiß"><i class="tape t"></i></figure>
+      <figure class="scrap w frame-o" style="--c:7/12;--row:2;--mt:-5%;--r:-3deg;--z:2"><img src="/img/iYcURjI3aZ8-900.webp" srcset="/img/iYcURjI3aZ8-900.webp 900w, /img/iYcURjI3aZ8-1800.webp 1800w" sizes="(max-width:760px) 100vw, 62vw" width="900" height="675" loading="lazy" alt="Euromünze mit Eule auf schwarzem Grund"><i class="tape t o"></i></figure>
+      <svg class="st o" style="width:5.6vw;left:44%;bottom:6%;--r:18deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="st ol" style="width:2.8vw;right:13%;bottom:5%;--r:-14deg" aria-hidden="true"><use href="#star"/></svg>
+    </div>
+
+    <!-- Autos -->
+    <div class="pair">
+      <figure class="scrap frame-o" style="--c:1/7;--r:-2deg"><img src="/img/kGuBcBm0E1g-900.webp" srcset="/img/kGuBcBm0E1g-900.webp 900w, /img/kGuBcBm0E1g-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1200" loading="lazy" alt="Rotes Mustang-Cabrio neben einem grauen Auto"><i class="tape t"></i></figure>
+      <figure class="scrap" style="--c:8/12;--mt:18%;--r:2.4deg"><img src="/img/Gth9FScaFCk-900.webp" srcset="/img/Gth9FScaFCk-900.webp 900w, /img/Gth9FScaFCk-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1350" loading="lazy" alt="Cadillac-Heckflosse"><i class="tape tl"></i><i class="tape tr"></i></figure>
+      <svg class="st o" style="width:5vw;left:57%;top:4%;--r:10deg" aria-hidden="true"><use href="#star"/></svg>
+    </div>
+
+    <!-- Fassaden -->
+    <div class="pair">
+      <figure class="scrap dots-behind" style="--c:2/5;--r:1.6deg"><img src="/img/XPmTnY4AHtk-900.webp" srcset="/img/XPmTnY4AHtk-900.webp 900w, /img/XPmTnY4AHtk-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1600" loading="lazy" alt="Tauben auf einem Betondach vor blauem Himmel"><i class="tape t o"></i></figure>
+      <figure class="scrap frame-c" style="--c:6/12;--mt:12%;--r:-1.6deg"><img src="/img/qIIUsbRZCtw-900.webp" srcset="/img/qIIUsbRZCtw-900.webp 900w, /img/qIIUsbRZCtw-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1200" loading="lazy" alt="Wohnhaus mit roten und weißen Balkonen"><i class="staple" style="left:18%"></i><i class="staple" style="right:18%"></i></figure>
+      <svg class="reg" style="left:0;bottom:6%" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="11"/><path d="M20 0V40M0 20H40"/></svg>
+    </div>
+
+    <!-- Wasser -->
+    <div class="pair">
+      <figure class="scrap frame-c" style="--c:2/6;--r:-2deg"><img src="/img/wElIrmSa0AU-900.webp" srcset="/img/wElIrmSa0AU-900.webp 900w, /img/wElIrmSa0AU-1800.webp 1800w" sizes="(max-width:760px) 50vw, 34vw" width="900" height="1350" loading="lazy" alt="Gelbe Boje spiegelt sich im ruhigen See"><i class="tape t"></i></figure>
+      <figure class="scrap w" style="--c:7/13;--mt:14%;--r:1.4deg"><img src="/img/tongwU50wgE-900.webp" srcset="/img/tongwU50wgE-900.webp 900w, /img/tongwU50wgE-1800.webp 1800w" sizes="(max-width:760px) 100vw, 62vw" width="900" height="600" loading="lazy" alt="Steg mit Leiter und Tauchverbotsschild am See"><i class="tape tl o"></i><i class="tape tr"></i></figure>
+    </div>
+
+    <!-- Finale -->
+    <div class="pair finale">
+      <figure class="scrap w frame-o" style="--c:2/12;--r:-1deg"><img src="/img/xKY4ZHJDITA-1800.webp" srcset="/img/xKY4ZHJDITA-900.webp 900w, /img/xKY4ZHJDITA-1800.webp 1800w" sizes="(max-width:760px) 100vw, 84vw" width="900" height="600" loading="lazy" alt="Milchstraße über Waldbäumen"><i class="tape tl"></i><i class="tape tr o"></i></figure>
+      <svg class="st c" style="width:2.4vw;left:3%;top:8%;--r:0deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="st c" style="width:1.4vw;left:6%;top:20%;--r:20deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="st o" style="width:5vw;right:2%;top:-4%;--r:-10deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="st c" style="width:1.8vw;right:4%;bottom:12%;--r:12deg" aria-hidden="true"><use href="#star"/></svg>
+      <svg class="st ol" style="width:2.8vw;left:2%;bottom:6%;--r:8deg" aria-hidden="true"><use href="#star"/></svg>
+    </div>
+
   </div>
 </main>
+
+<footer class="foot">
+  <span>© <span id="y">2026</span> Niklas König</span>
+  <a href="/datenschutz.html">Datenschutz</a>
+</footer>
+
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
 </body>
 </html>

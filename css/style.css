@@ -1,0 +1,221 @@
+/* nkoenig.studio — eine Seite, Grunge: Schwarz, Papierfetzen, Klebeband, #ff6600 */
+
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url(/fonts/archivo-latin.woff2) format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --o: #ff6600;
+  --ink: #0d0d0d;
+  --chalk: #f6f2ea;
+  --gut: 4vw;
+  --cream: #ece4d3;
+  --tape: rgba(236, 229, 214, .74);
+  --tape-o: rgba(255, 102, 0, .86);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --torn-a: polygon(3.0% 0.5%,5.1% 1.7%,7.1% 5.1%,9.1% 0.3%,14.0% 0.4%,18.1% 3.0%,21.4% 8.1%,24.3% 3.5%,29.1% 0.6%,33.2% 1.2%,35.3% 0.2%,39.6% 1.4%,43.6% 1.5%,48.3% 2.2%,52.2% 1.7%,56.7% 0.9%,59.0% 1.3%,61.3% 5.9%,66.0% 1.8%,68.9% 2.2%,72.9% 1.5%,78.2% 1.5%,80.2% 2.2%,85.7% 2.6%,88.9% 5.8%,91.3% 5.1%,93.6% 0.8%,98.6% 0.3%,100.0% 2.8%,99.1% 5.0%,97.2% 8.1%,99.4% 10.5%,98.4% 13.1%,100.0% 15.9%,98.2% 19.1%,98.4% 23.4%,99.8% 27.7%,97.2% 32.4%,94.5% 35.7%,99.8% 37.7%,96.9% 40.1%,99.7% 42.5%,97.2% 44.4%,99.2% 46.7%,99.6% 49.9%,98.5% 55.3%,99.7% 57.5%,97.3% 60.2%,97.0% 62.1%,94.4% 64.5%,97.2% 69.9%,98.8% 72.6%,98.3% 77.3%,99.3% 80.3%,97.3% 85.8%,97.6% 90.6%,96.8% 94.3%,99.2% 97.1%,98.6% 100.0%,94.5% 96.9%,91.9% 99.3%,89.4% 98.0%,84.5% 98.5%,79.7% 99.7%,74.5% 97.5%,71.0% 99.4%,67.9% 97.4%,64.7% 98.7%,60.2% 99.5%,57.8% 97.1%,55.5% 97.4%,51.3% 98.9%,49.0% 100.0%,44.8% 98.3%,41.4% 97.2%,38.8% 99.2%,36.1% 98.1%,32.7% 99.6%,29.6% 98.5%,24.5% 98.7%,20.8% 98.3%,19.0% 98.6%,17.2% 97.4%,13.6% 97.7%,10.6% 98.3%,5.9% 99.7%,3.2% 99.1%,0.0% 98.2%,1.4% 94.8%,1.6% 91.2%,1.7% 87.7%,2.2% 82.4%,0.8% 77.1%,2.7% 71.8%,4.3% 69.6%,2.1% 67.5%,0.5% 62.4%,0.5% 58.1%,0.7% 52.8%,1.6% 49.5%,0.5% 44.6%,1.1% 40.9%,6.3% 37.9%,0.1% 34.5%,7.1% 30.4%,6.0% 25.7%,2.5% 23.7%,1.4% 21.4%,0.8% 16.6%,1.8% 11.4%,0.2% 9.3%,0.2% 5.9%,7.6% 1.8%,2.8% 0.0%);
+  --torn-b: polygon(3.3% 0.6%,7.4% 1.7%,12.3% 2.2%,17.8% 0.4%,20.3% 1.3%,22.6% 0.5%,27.6% 0.2%,30.3% 2.8%,35.5% 3.2%,39.7% 3.0%,41.6% 1.6%,44.8% 1.6%,48.0% 0.4%,51.0% 5.2%,54.8% 0.3%,59.2% 3.1%,61.1% 1.5%,64.1% 2.0%,67.2% 2.2%,71.1% 1.1%,75.2% 3.1%,80.5% 5.8%,83.2% 1.4%,87.6% 3.3%,89.5% 1.8%,95.0% 2.1%,98.4% 1.5%,100.0% 3.1%,97.8% 4.5%,97.1% 10.0%,99.1% 14.1%,97.2% 16.9%,94.5% 19.4%,98.8% 21.9%,98.3% 24.4%,97.8% 28.8%,99.9% 33.8%,99.0% 36.9%,98.6% 40.1%,97.4% 43.3%,99.0% 46.6%,99.0% 49.1%,97.6% 54.5%,99.3% 59.5%,94.8% 61.8%,97.8% 65.3%,98.6% 70.7%,99.3% 74.9%,99.0% 77.3%,95.7% 81.6%,98.9% 86.8%,99.2% 91.2%,97.3% 96.2%,100.0% 99.6%,96.8% 100.0%,95.7% 97.4%,92.8% 99.3%,89.4% 97.6%,86.0% 98.6%,82.7% 97.6%,80.0% 99.1%,74.9% 99.1%,70.1% 99.4%,66.6% 99.3%,63.6% 98.8%,59.2% 96.6%,55.8% 92.3%,52.9% 99.1%,47.4% 99.9%,44.9% 100.0%,39.4% 98.5%,34.7% 99.1%,31.3% 98.1%,26.5% 98.3%,22.2% 94.9%,20.3% 98.2%,16.5% 98.6%,13.4% 99.5%,9.1% 97.5%,4.2% 94.2%,0.0% 96.1%,2.2% 97.6%,3.5% 92.3%,3.0% 88.2%,1.4% 84.0%,1.8% 78.6%,5.4% 75.0%,2.2% 71.5%,3.1% 69.2%,0.8% 64.4%,3.1% 59.5%,2.4% 55.4%,1.2% 50.5%,1.1% 46.4%,1.6% 43.0%,2.2% 39.0%,0.0% 34.5%,2.4% 32.1%,0.7% 28.4%,3.0% 25.1%,0.1% 21.5%,0.5% 17.4%,1.3% 13.4%,1.9% 11.1%,0.5% 9.1%,1.0% 5.8%,2.1% 0.6%,3.0% 0.0%);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--grain), var(--ink);
+  color: var(--chalk);
+  font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; height: auto; }
+figure { margin: 0; }
+a { color: inherit; }
+::selection { background: var(--o); color: var(--ink); }
+
+/* ---------- Gesicht zuerst ---------- */
+.hero { padding: 4.4vw var(--gut) 3vw; display: grid; justify-items: center; }
+.name {
+  margin: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-stretch: 125%;
+  font-size: min(9.5vw, 156px); line-height: .82; letter-spacing: -.035em;
+  text-transform: uppercase;
+  filter: url(#press);
+  position: relative; z-index: 2;
+}
+.name span { position: relative; z-index: 1; }
+.name-star {
+  width: min(13vw, 210px); height: min(17vw, 270px);
+  fill: var(--o); flex: none;
+  margin: 0 -2.4vw 0 -1.6vw;
+  position: relative; z-index: 2;
+}
+.face {
+  position: relative;
+  width: min(40vw, 58vh, 600px);
+  margin-top: -1.2vw;
+  transform: rotate(-2.5deg);
+}
+.face .paper { position: absolute; inset: -6% -6% -7% -5%; background: var(--o); clip-path: var(--torn-b); }
+.face .shot { position: relative; background: #fff; clip-path: polygon(0 1%, 100% 0, 99% 100%, 1% 99%); }
+.face .real { position: absolute; inset: 0; opacity: 0; transition: opacity .5s; }
+.face:hover .real { opacity: 1; }
+
+/* ---------- Statement ---------- */
+.statement { position: relative; padding: 5vw var(--gut) 2vw; }
+.shout {
+  margin: 0;
+  font-weight: 900; text-transform: uppercase; color: var(--o);
+  font-size: min(21vw, 330px); line-height: .8; letter-spacing: 0;
+  filter: url(#worn);
+}
+.shout span { display: block; white-space: nowrap; }
+.shout .l2 { margin-left: 8vw; margin-top: .02em; }
+.shout b {
+  display: inline-block; font-weight: 900;
+  font-stretch: var(--w, 70%);
+  transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
+  text-shadow: .028em .022em 0 rgba(246, 242, 234, .9);
+  margin-right: -.01em;
+}
+.shout .chip, .shout .chip-o {
+  color: var(--ink); text-shadow: none;
+  padding: .06em .07em 0; margin: 0 .03em;
+  clip-path: var(--torn-b);
+}
+.shout .chip { background: var(--cream); }
+.shout .chip-o { background: var(--o); }
+.shout .ol { color: transparent; -webkit-text-stroke: .034em var(--o); text-shadow: none; }
+.shout .tape-word {
+  display: inline-block; vertical-align: .95em;
+  font-style: normal; font-weight: 800; font-stretch: 125%;
+  font-size: .2em; line-height: 1; letter-spacing: -.01em; text-transform: lowercase;
+  color: var(--ink);
+  background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(0,0,0,.06)), var(--tape);
+  padding: .3em .7em .26em;
+  margin-right: .3em;
+  clip-path: polygon(0 4%, 3% 18%, 0 34%, 3% 50%, 0 66%, 3% 82%, 0 100%, 100% 96%, 97% 80%, 100% 64%, 97% 48%, 100% 32%, 97% 16%, 100% 0);
+  transform: rotate(-9deg);
+}
+.shout-star { width: .5em; height: .5em; fill: var(--o); margin-left: .05em; transform: translateY(.02em) rotate(14deg); }
+
+/* ---------- Fotowand ---------- */
+.wall { padding: 0 calc(var(--gut) + 1vw) 11vw; }
+.pair {
+  position: relative;
+  display: grid; grid-template-columns: repeat(12, 1fr);
+  column-gap: 2.4vw; align-items: start;
+  margin-top: 9vw;
+}
+.pair:first-child { margin-top: 5vw; }
+.scrap {
+  grid-row: var(--row, 1);
+  grid-column: var(--c);
+  margin-top: var(--mt, 0);
+  position: relative; z-index: var(--z, 1);
+  transform: rotate(var(--r, 0deg));
+}
+.scrap img { position: relative; z-index: 1; width: 100%; }
+
+/* Rahmen: gerissenes Papier, orange oder creme */
+.frame-o::before, .frame-c::before, .dots-behind::before {
+  content: ""; position: absolute; inset: -5% -4% -6% -4%;
+}
+.frame-o::before { background: var(--o); clip-path: var(--torn-a); }
+.frame-c::before { background: var(--grain-dark), var(--cream); clip-path: var(--torn-b); inset: -6% -5% -7% -5%; }
+.frame-o.w::before, .frame-c.w::before { inset: -9% -3% -10% -3%; }
+.dots-behind::before {
+  inset: 9% -16% -9% 14%;
+  background: radial-gradient(circle, var(--o) 0 30%, transparent 33%) 0 0 / 9px 9px;
+  clip-path: var(--torn-a);
+}
+
+/* Klebeband */
+.tape {
+  position: absolute; z-index: 3;
+  width: 34%; min-width: 64px; max-width: 180px; height: 30px;
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(0,0,0,.06)), var(--tape);
+  clip-path: polygon(0 4%, 3% 18%, 0 34%, 3% 50%, 0 66%, 3% 82%, 0 100%, 100% 96%, 97% 80%, 100% 64%, 97% 48%, 100% 32%, 97% 16%, 100% 0);
+}
+.tape.o { background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.05)), var(--tape-o); }
+.tape.t  { left: 50%; top: -15px; transform: translateX(-50%) rotate(-3deg); }
+.tape.tl { left: -8%; top: 3%; width: 30%; transform: rotate(-40deg); }
+.tape.tr { right: -8%; top: 3%; width: 30%; transform: rotate(38deg); }
+.tape.br { right: -8%; bottom: 4%; width: 30%; transform: rotate(-36deg); }
+
+/* Tackernadeln */
+.staple {
+  position: absolute; z-index: 3; top: 2.4%;
+  width: 30px; height: 5px; border-radius: 1px;
+  background: linear-gradient(180deg, #e6e6e6, #8d8d8d);
+  box-shadow: 0 1px 1px rgba(0,0,0,.55);
+  transform: rotate(-4deg);
+}
+
+/* Sterne, Passkreuze, Kritzeleien */
+.st { position: absolute; z-index: 4; aspect-ratio: 1; height: auto; transform: rotate(var(--r, 0deg)); pointer-events: none; }
+.st.o { fill: var(--o); }
+.st.c { fill: var(--chalk); }
+.st.ol { fill: none; stroke: var(--chalk); stroke-width: 4; }
+.reg { position: absolute; width: 28px; fill: none; stroke: rgba(246,242,234,.55); stroke-width: 1.4; }
+.scribble {
+  position: absolute; z-index: 4; pointer-events: none;
+  fill: none; stroke: var(--chalk); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round;
+  filter: url(#press);
+}
+.scribble.arrow { left: -30%; top: 20%; width: 22%; }
+.scribble.under { position: relative; display: block; width: min(58vw, 860px); height: 44px; margin: .6vw 0 0 12vw; stroke: var(--chalk); }
+.scribble.x { width: 3.4vw; stroke: var(--o); stroke-width: 6; }
+
+/* ---------- Fuss ---------- */
+.foot {
+  display: flex; justify-content: space-between; gap: 1rem;
+  padding: 16px var(--gut) 20px;
+  font-size: 12px; font-weight: 600; color: rgba(246,242,234,.55);
+}
+.foot a { text-decoration: none; }
+.foot a:hover { color: var(--o); }
+
+/* ---------- Datenschutz-Seite ---------- */
+.legal { padding: 6vw var(--gut) 8vw; }
+.legal h1 { margin: 0; font-weight: 900; font-stretch: 62%; text-transform: uppercase; color: var(--o); font-size: min(18vw, 200px); line-height: .8; filter: url(#press); }
+.legal-body { max-width: 40rem; margin-top: 4vw; font-size: 16px; line-height: 1.5; }
+.legal-body h2 { font-size: 17px; font-weight: 800; margin: 2em 0 .4em; }
+.legal-body p { margin: 0 0 .9em; }
+.legal-back { display: inline-block; margin-top: 3vw; font-weight: 800; text-transform: uppercase; font-size: 13px; text-decoration: none; border-bottom: 2px solid var(--o); }
+
+/* ---------- Schmal ---------- */
+@media (max-width: 760px) {
+  :root { --gut: 16px; }
+  .hero { padding-top: 28px; }
+  .name { flex-direction: column; font-size: 20vw; line-height: .84; }
+  .name-star { width: 18vw; height: 22vw; margin: -2.4vw 0; }
+  .face { width: 78vw; margin-top: 26px; }
+  .scribble.arrow { display: none; }
+  .statement { padding-top: 64px; }
+  .shout { font-size: 23vw; }
+  .shout .l2 { margin-left: 2vw; }
+  .scribble.under { width: 80vw; height: 30px; margin-left: 4vw; }
+  .wall { padding: 0 22px 64px; }
+  .pair { grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 36px; margin-top: 56px; }
+  .pair:first-child { margin-top: 40px; }
+  .scrap { grid-row: auto; grid-column: auto; margin-top: 0; }
+  .scrap.w { grid-column: 1 / -1; }
+  .pair:has(.w) .scrap:not(.w) { grid-column: 1 / -1; width: 66%; justify-self: center; margin-top: 0; }
+  .scrap:nth-child(2):not(.w) { margin-top: 18%; }
+  .pair.quad .scrap:not(.w) { grid-column: auto; width: auto; }
+  .pair.quad .scrap:nth-child(2) { margin-top: 18%; }
+  .tape { height: 22px; min-width: 52px; }
+  .tape.t { top: -11px; }
+  .st.o, .st.c, .st.ol { min-width: 18px; }
+  .scribble.x, .reg { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .face .real { transition: none; }
+}
