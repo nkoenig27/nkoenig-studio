@@ -67,7 +67,7 @@ a { color: inherit; }
   display: flex; flex-direction: column; justify-content: center; gap: .6cqw;
 }
 .ransom .row { display: flex; align-items: center; justify-content: center; gap: .5%; }
-.ransom .row.small { justify-content: flex-start; padding-left: 4%; margin: -.6cqw 0; }
+.ransom .row.small { justify-content: center; margin: -.6cqw 0; }
 .ransom img {
   height: 19cqw; width: auto; flex: none;
   transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
@@ -199,7 +199,6 @@ a { color: inherit; }
   .wheat { padding-top: 56px; }
   .poster { width: 96vw; aspect-ratio: 1500 / 1100; }
   .ransom { inset: 10% 5% 9%; }
-  .ransom .row.small { padding-left: 4%; }
   .wall { padding: 0 22px 56px; }
   .pair { grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 36px; margin-top: 56px; }
   .pair:first-child { margin-top: 40px; }
