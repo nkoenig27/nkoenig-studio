@@ -72,9 +72,54 @@ a { color: inherit; }
   height: 20cqw; width: auto; flex: none;
   transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
   filter: drop-shadow(0 1.5px 1px rgba(0,0,0,.38)) drop-shadow(0 4px 6px rgba(0,0,0,.12));
+  /* Stop-Motion in Schueben: kurz ruckeln (ca. 9 Bilder/s), dann Pause; jeder Ausschnitt im eigenen Rhythmus */
+  transform-origin: 50% 80%;
+  animation: var(--jn, jitter-a) var(--fd, .75s) steps(1, end) var(--fdl, 0s) infinite;
+}
+.ransom .row:nth-child(1) img:nth-child(1) { --jn: jitter-a; --fd: 4.4s; --fdl: -1.63s; }
+.ransom .row:nth-child(1) img:nth-child(2) { --jn: jitter-b; --fd: 5.6s; --fdl: -0.71s; }
+.ransom .row:nth-child(1) img:nth-child(3) { --jn: jitter-c; --fd: 3.7s; --fdl: -0.16s; }
+.ransom .row:nth-child(1) img:nth-child(4) { --jn: jitter-a; --fd: 4.4s; --fdl: -1.09s; }
+.ransom .row:nth-child(1) img:nth-child(5) { --jn: jitter-c; --fd: 3.7s; --fdl: -0.77s; }
+.ransom .row:nth-child(2) img:nth-child(1) { --jn: jitter-c; --fd: 3.7s; --fdl: -0.11s; }
+.ransom .row:nth-child(2) img:nth-child(2) { --jn: jitter-b; --fd: 5.6s; --fdl: -2.54s; }
+.ransom .row:nth-child(2) img:nth-child(3) { --jn: jitter-b; --fd: 5.6s; --fdl: -3.21s; }
+.ransom .row:nth-child(2) img:nth-child(4) { --jn: jitter-b; --fd: 5.6s; --fdl: -0.5s; }
+.ransom .row:nth-child(3) img:nth-child(1) { --jn: jitter-a; --fd: 4.4s; --fdl: -3.34s; }
+.ransom .row:nth-child(3) img:nth-child(2) { --jn: jitter-c; --fd: 3.7s; --fdl: -0.99s; }
+.ransom .row:nth-child(3) img:nth-child(3) { --jn: jitter-b; --fd: 5.6s; --fdl: -2.66s; }
+.ransom .row:nth-child(3) img:nth-child(4) { --jn: jitter-b; --fd: 5.6s; --fdl: -4.07s; }
+.ransom .row:nth-child(3) img:nth-child(5) { --jn: jitter-c; --fd: 3.7s; --fdl: -0.96s; }
+.ransom .dot { --jn: jitter-c; --fd: 3.7s; --fdl: -1.9s; }
+@keyframes jitter-a {
+  0.0% { rotate: -1.32deg; translate: 0.14cqw 0.04cqw; }
+  2.5% { rotate: -0.88deg; translate: -0.0cqw -0.07cqw; }
+  5.0% { rotate: 0.55deg; translate: 0.12cqw -0.19cqw; }
+  7.5% { rotate: -1.7deg; translate: 0.13cqw -0.07cqw; }
+  10.0% { rotate: 0.94deg; translate: -0.2cqw -0.07cqw; }
+  12.5% { rotate: 0.8deg; translate: -0.11cqw 0.1cqw; }
+  15.0%, 100% { rotate: 0deg; translate: 0 0; }
+}
+@keyframes jitter-b {
+  0.0% { rotate: 1.64deg; translate: 0.18cqw -0.2cqw; }
+  1.96% { rotate: -1.49deg; translate: 0.13cqw 0.03cqw; }
+  3.93% { rotate: 0.61deg; translate: -0.08cqw -0.01cqw; }
+  5.89% { rotate: 0.38deg; translate: 0.03cqw -0.17cqw; }
+  7.86% { rotate: -0.25deg; translate: -0.04cqw 0.03cqw; }
+  9.82% { rotate: 1.78deg; translate: 0.18cqw -0.03cqw; }
+  11.79%, 100% { rotate: 0deg; translate: 0 0; }
+}
+@keyframes jitter-c {
+  0.0% { rotate: -0.94deg; translate: 0.02cqw -0.09cqw; }
+  2.97% { rotate: 0.37deg; translate: 0.05cqw -0.2cqw; }
+  5.95% { rotate: -1.75deg; translate: 0.13cqw -0.13cqw; }
+  8.92% { rotate: -0.96deg; translate: 0.2cqw -0.06cqw; }
+  11.89% { rotate: 1.21deg; translate: -0.01cqw -0.0cqw; }
+  14.86% { rotate: -1.26deg; translate: 0.05cqw 0.08cqw; }
+  17.84%, 100% { rotate: 0deg; translate: 0 0; }
 }
 .ransom .small img { height: 11.4cqw; }
-.ransom .dot { height: 6.4cqw; margin-left: .6%; }
+.ransom .dot { --jn: jitter-c; --fd: 3.7s; --fdl: -1.9s; }
 
 /* ---------- Klebeband ---------- */
 .tape {
@@ -223,4 +268,8 @@ a { color: inherit; }
   .reg, .trim::after { display: none; }
   .dogear img { clip-path: polygon(0 0, calc(100% - 44px) 0, 100% 44px, 100% 100%, 0 100%); }
   .dogear::after { width: 44px; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ransom img { animation: none; }
 }
