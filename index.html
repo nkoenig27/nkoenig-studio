@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/style.css?v=7">
+<link rel="stylesheet" href="/css/style.css?v=8">
 </head>
 <body>
 
@@ -27,12 +27,14 @@
       <svg class="name-star" aria-hidden="true"><use href="#star"/></svg>
       <span>König</span>
     </h1>
-    <figure class="face">
-      <img class="back" src="/img/paper/face-back.webp" width="1200" height="1200" alt="">
-      <img class="photo" src="/img/niklas-1400.webp" width="1400" height="1400" alt="Niklas König">
-      <img class="window" src="/img/paper/face-window.webp" width="1200" height="1200" alt="">
-      <i class="tape masking" style="--l:-4%;--t:5%;--w:26%;--r:-36deg"></i>
-    </figure>
+    <a class="face-link" href="https://unsplash.com/@nottwentyseven" rel="noopener" aria-label="Niklas König auf Unsplash">
+      <figure class="face">
+        <img class="back" src="/img/paper/face-back.webp" width="1200" height="1200" alt="">
+        <img class="photo" src="/img/niklas-1400.webp" width="1400" height="1400" alt="Niklas König">
+        <img class="window" src="/img/paper/face-window.webp" width="1200" height="1200" alt="">
+        <i class="tape masking" style="--l:-4%;--t:5%;--w:26%;--r:-36deg"></i>
+      </figure>
+    </a>
   </section>
 
   <!-- ===== Plakat aus Heftausschnitten ===== -->
@@ -104,7 +106,8 @@
 
 <footer class="foot">
   <span>© <span id="y">2026</span> Niklas König</span>
-  <a href="/datenschutz.html">Datenschutz</a>
+  <a class="mid" href="https://unsplash.com/@nottwentyseven" rel="noopener">Unsplash</a>
+  <a class="end" href="/datenschutz.html">Datenschutz</a>
 </footer>
 
 <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
