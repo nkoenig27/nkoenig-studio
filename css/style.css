@@ -165,11 +165,6 @@ a { color: inherit; }
     linear-gradient(var(--m) 0 0) right 0 bottom 20px / 13px 1px no-repeat,
     linear-gradient(var(--m) 0 0) right 20px bottom 0 / 1px 13px no-repeat;
 }
-.cbar {
-  position: absolute; z-index: 2; width: 11px; height: 132px;
-  background: linear-gradient(180deg, #ff6600 0 12.5%, #0d0d0d 0 25%, #f2eee6 0 37.5%, #8a8a8a 0 50%, #c24e00 0 62.5%, #ece4d3 0 75%, #474747 0 87.5%, #ffb27f 0);
-  outline: 1px solid rgba(242,238,230,.3); outline-offset: 2px;
-}
 .reg { position: absolute; width: 28px; fill: none; stroke: rgba(242,238,230,.45); stroke-width: 1.4; }
 
 /* ---------- Fuss: einfach aufgedruckt ---------- */
@@ -217,7 +212,7 @@ a { color: inherit; }
   .print img { border-width: 6px; }
   .tape { height: 21px; min-width: 48px; }
   .tape.t { top: -11px; }
-  .reg, .cbar, .trim::after { display: none; }
+  .reg, .trim::after { display: none; }
   .dogear img { clip-path: polygon(0 0, calc(100% - 44px) 0, 100% 44px, 100% 100%, 0 100%); }
   .dogear::after { width: 44px; height: 44px; }
 }
