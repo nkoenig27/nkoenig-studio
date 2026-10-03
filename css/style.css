@@ -47,6 +47,13 @@ a { color: inherit; }
 
 .face-link { display: block; position: relative; z-index: 2; }
 .face-link:focus-visible { outline: 2px solid var(--o); outline-offset: 10px; }
+.roles {
+  margin: 3.4vw 0 0; position: relative; z-index: 3;
+  display: flex; align-items: center; justify-content: center; gap: .9em;
+  font-weight: 600; font-stretch: 112%; text-transform: uppercase;
+  font-size: max(13.5px, min(1.25vw, 19px)); letter-spacing: .02em; color: rgba(242,238,230,.78);
+}
+.roles-star { width: .7em; height: .7em; fill: var(--o); flex: none; }
 .face { position: relative; width: min(42vw, 62vh, 620px); aspect-ratio: 1; margin-top: .6vw; transform: rotate(-2deg); }
 .face img { position: absolute; }
 .face .back { inset: 0; width: 100%; transform: translate(4.5%, 3%) rotate(4.5deg); filter: var(--paper-shadow); }
@@ -187,16 +194,34 @@ a { color: inherit; }
   background: url(/img/assets/sleeve.webp) center / 100% 100%;
   mix-blend-mode: screen; opacity: .62;
 }
-/* Schallplatte, halb hinter dem Foto */
-.scrap img.vinyl { position: absolute; z-index: 0; width: 82%; right: -30%; top: -30%; transform: rotate(-12deg); filter: brightness(1.35) contrast(1.05); }
-
-/* Raster wie ein angeschnittener Zeitungsausschnitt */
-.dots::before {
-  content: ""; position: absolute; inset: 9% -16% -9% 14%;
-  background: radial-gradient(circle, var(--o) 0 30%, transparent 33%) 0 0 / 9px 9px;
-  -webkit-mask: url(/img/paper/frame-c-p.webp) center / 100% 100%; mask: url(/img/paper/frame-c-p.webp) center / 100% 100%;
+/* Ebenen: dahinter ein eigener, versetzt gedrehter Bogen ... */
+.back {
+  position: absolute; inset: -7% -6% -8% -6%; z-index: 0; pointer-events: none;
+  background: center / 100% 100% no-repeat;
+  transform: translate(var(--bx, 0), var(--by, 0)) rotate(var(--br, 0deg));
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
 }
-.dots.print::before { inset: 10% -18% -8% 16%; }
+.back.fo { background-image: url(/img/paper/frame-o-p.webp); }
+.back.fc { background-image: url(/img/paper/frame-c-p.webp); }
+.w .back.fo { background-image: url(/img/paper/frame-o-l.webp); inset: -10% -5% -11% -5%; }
+.w .back.fc { background-image: url(/img/paper/frame-c-l.webp); inset: -10% -5% -11% -5%; }
+.w .back.fw { background-image: url(/img/paper/frame-w-l.webp); inset: -10% -5% -11% -5%; }
+.back.grid { background-image: url(/img/assets/grid.webp); inset: -6% -22% -10% -14%; }
+/* ... auf dem Foto echte Knitterfalten (wie Ebenenmodus "Weiches Licht") ... */
+.crease {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: var(--cr) var(--cp, 50% 50%) / cover no-repeat;
+  mix-blend-mode: soft-light; opacity: var(--co, .7);
+}
+.dogear .crease { clip-path: polygon(0 0, calc(100% - 70px) 0, 100% 70px, 100% 100%, 0 100%); }
+.sleeve.s2 { background-image: url(/img/assets/sleeve-2.webp); inset: -4% -3% -5% -3%; opacity: .7; }
+/* ... und ein Abzug mit abgerissener Unterkante: weisser Papierkern blitzt am Riss */
+.tear img, .tear .crease { -webkit-mask: url(/img/assets/tear-b.webp) center / 100% 100% no-repeat; mask: url(/img/assets/tear-b.webp) center / 100% 100% no-repeat; }
+.tear .core {
+  position: absolute; inset: 0; z-index: 0; background: #f4f1ea;
+  -webkit-mask: url(/img/assets/tear-b-core.webp) center / 100% 100% no-repeat; mask: url(/img/assets/tear-b-core.webp) center / 100% 100% no-repeat;
+}
+
 .print img { border: 10px solid #f3efe6; }
 .dogear img { clip-path: polygon(0 0, calc(100% - 70px) 0, 100% 70px, 100% 100%, 0 100%); }
 .dogear::after {
@@ -219,7 +244,6 @@ a { color: inherit; }
     linear-gradient(var(--m) 0 0) right 0 bottom 20px / 13px 1px no-repeat,
     linear-gradient(var(--m) 0 0) right 20px bottom 0 / 1px 13px no-repeat;
 }
-.reg { position: absolute; width: 28px; fill: none; stroke: rgba(242,238,230,.45); stroke-width: 1.4; }
 
 /* ---------- Fuss: einfach aufgedruckt ---------- */
 .foot {
@@ -232,6 +256,21 @@ a { color: inherit; }
 }
 .foot a { text-decoration: none; }
 .foot .end { justify-self: end; }
+.foot .mid {
+  position: relative; isolation: isolate;
+  padding: 7px 16px 6px;
+  color: var(--ink); font-weight: 700;
+  transform: rotate(-2deg);
+  transition: transform .25s cubic-bezier(.2,.8,.2,1);
+}
+/* wie beim Portrait: Creme vorn, Orange versetzt dahinter */
+.foot .mid::before, .foot .mid::after {
+  content: ""; position: absolute; inset: 0;
+  background: center / 100% 100% no-repeat;
+}
+.foot .mid::before { z-index: -1; background-image: url(/img/paper/label-c.webp); filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.foot .mid::after { z-index: -2; inset: -1px -3px -2px -1px; background-image: url(/img/paper/label-o.webp); transform: translate(7px, 5px) rotate(6.5deg); filter: drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
+.foot .mid:hover { color: var(--ink); transform: rotate(0deg) translateY(-2px); }
 .foot a:hover { color: var(--o); }
 
 /* ---------- Datenschutz-Seite ---------- */
@@ -248,6 +287,7 @@ a { color: inherit; }
   .hero { padding-top: 30px; }
   .name { flex-direction: column; font-size: 20vw; line-height: .9; }
   .name-star { width: 18vw; height: 22vw; margin: -1vw 0; }
+  .roles { font-size: 12.5px; margin-top: 30px; gap: .75em; }
   .face { width: 84vw; margin-top: 30px; }
   .foot { gap: .6rem; font-size: 11px; }
   .wheat { padding-top: 56px; }
@@ -265,8 +305,8 @@ a { color: inherit; }
   .print img { border-width: 6px; }
   .tape { height: 21px; min-width: 48px; }
   .tape.t { top: -11px; }
-  .reg, .trim::after { display: none; }
-  .dogear img { clip-path: polygon(0 0, calc(100% - 44px) 0, 100% 44px, 100% 100%, 0 100%); }
+  .trim::after { display: none; }
+  .dogear img, .dogear .crease { clip-path: polygon(0 0, calc(100% - 44px) 0, 100% 44px, 100% 100%, 0 100%); }
   .dogear::after { width: 44px; height: 44px; }
 }
 
