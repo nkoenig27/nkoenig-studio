@@ -58,23 +58,23 @@ a { color: inherit; }
 
 /* ---------- Plakat ---------- */
 .wheat { padding: 7vw var(--gut) 4vw; display: grid; justify-items: center; }
-.poster { position: relative; width: min(1180px, 90vw); aspect-ratio: 1500 / 900; transform: rotate(-1.4deg); container-type: inline-size; }
+.poster { position: relative; width: min(1060px, 82vw); aspect-ratio: 2000 / 1592; transform: rotate(-1.4deg); container-type: inline-size; }
 .poster > img { position: absolute; }
-.poster-back { width: 74%; left: -6%; top: 16%; transform: rotate(6deg); filter: var(--paper-shadow); }
+.poster-back { width: 78%; left: -7%; top: 20%; transform: rotate(5deg); filter: var(--paper-shadow); }
 .poster-sheet { inset: 0; width: 100%; height: 100%; filter: var(--paper-shadow); }
 .ransom {
-  position: absolute; inset: 7% 6% 7%; margin: 0;
+  position: absolute; inset: 15% 8% 9%; margin: 0;
   display: flex; flex-direction: column; justify-content: center; gap: .6cqw;
 }
 .ransom .row { display: flex; align-items: center; justify-content: center; gap: .5%; }
 .ransom .row.small { justify-content: center; margin: -.6cqw 0; }
 .ransom img {
-  height: 19cqw; width: auto; flex: none;
+  height: 20cqw; width: auto; flex: none;
   transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
   filter: drop-shadow(0 1.5px 1px rgba(0,0,0,.38)) drop-shadow(0 4px 6px rgba(0,0,0,.12));
 }
-.ransom .small img { height: 10.6cqw; }
-.ransom .dot { height: 6cqw; margin-left: .6%; }
+.ransom .small img { height: 11.4cqw; }
+.ransom .dot { height: 6.4cqw; margin-left: .6%; }
 
 /* ---------- Klebeband ---------- */
 .tape {
@@ -135,6 +135,15 @@ a { color: inherit; }
 .frame.fc::before { background-image: url(/img/paper/frame-c-p.webp); }
 .frame.w.fo::before { background-image: url(/img/paper/frame-o-l.webp); }
 .frame.w.fc::before { background-image: url(/img/paper/frame-c-l.webp); }
+
+/* Abzug in zerkratzter Klarsichtfolie: schwarz = durchsichtig */
+.sleeve {
+  position: absolute; inset: -3% -4% -3% -3%; z-index: 2; pointer-events: none;
+  background: url(/img/assets/sleeve.webp) center / 100% 100%;
+  mix-blend-mode: screen; opacity: .62;
+}
+/* Schallplatte, halb hinter dem Foto */
+.scrap img.vinyl { position: absolute; z-index: 0; width: 82%; right: -30%; top: -30%; transform: rotate(-12deg); filter: brightness(1.35) contrast(1.05); }
 
 /* Raster wie ein angeschnittener Zeitungsausschnitt */
 .dots::before {
@@ -197,8 +206,8 @@ a { color: inherit; }
   .face { width: 84vw; margin-top: 30px; }
   .foot { gap: .6rem; font-size: 11px; }
   .wheat { padding-top: 56px; }
-  .poster { width: 96vw; aspect-ratio: 1500 / 1100; }
-  .ransom { inset: 10% 5% 9%; }
+  .poster { width: 96vw; }
+  .ransom { inset: 15% 6% 8%; }
   .wall { padding: 0 22px 56px; }
   .pair { grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 36px; margin-top: 56px; }
   .pair:first-child { margin-top: 40px; }
