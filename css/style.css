@@ -90,7 +90,7 @@ a { color: inherit; }
 .ransom .row:nth-child(3) img:nth-child(3) { --jn: jitter-b; --fd: 5.6s; --fdl: -2.66s; }
 .ransom .row:nth-child(3) img:nth-child(4) { --jn: jitter-b; --fd: 5.6s; --fdl: -4.07s; }
 .ransom .row:nth-child(3) img:nth-child(5) { --jn: jitter-c; --fd: 3.7s; --fdl: -0.96s; }
-.ransom .dot { --jn: jitter-c; --fd: 3.7s; --fdl: -1.9s; }
+.ransom .dot { height: 6.4cqw; margin-left: .6%; }
 @keyframes jitter-a {
   0.0% { rotate: -1.32deg; translate: 0.14cqw 0.04cqw; }
   2.5% { rotate: -0.88deg; translate: -0.0cqw -0.07cqw; }
