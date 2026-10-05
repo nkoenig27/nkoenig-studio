@@ -20,6 +20,7 @@
     e.preventDefault();
     opener = a; show(n);
     dlg.showModal();
+    dlg.focus();   // Fokus auf den Dialog selbst, damit der Schliessen-Knopf nicht gleich gelb aufleuchtet
     document.documentElement.classList.add('viewing');
   }));
 
