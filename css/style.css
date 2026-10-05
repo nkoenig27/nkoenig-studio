@@ -1,4 +1,10 @@
-/* nkoenig.studio V5 — Mixed-Media-Collage: Schwarz, Creme, Gelb #eac435, Rot als winziger Akzent */
+/* nkoenig.studio V9: V8 + Feder-Physik (js/light.js), Raytracing-Anmutung (Hoehenschatten, Lichtbrechung im Acryl,
+   Bloom, Fresnel, Kaustik) und Druckartefakte (Passer, Tonwertzuwachs, Raster, Druckfarbe auf Folie).
+   V8 = V6 "Sealed" + aus V7 uebernommen: Holo-Karten faecherartig unter dem Pack,
+   irisierender Holo-Rand der seltenen Karten, Foto-Grossansicht. Kein Light Mode, keine Bildtexte.
+   V6 "Sealed" — man schaut auf echte Dinge: ein aufgerissenes Folienpack, ein laminiertes
+   Plakat, Karten in Huellen. Ein gemeinsames Licht (js/light.js) kippt alles leicht und wandert ueber Folie,
+   Kunststoff und Holo. Tiefe: unscharfe Dinge weit hinten und nah vor der Linse, scharf in der Mitte. */
 
 @font-face {
   font-family: "Archivo";
@@ -11,14 +17,29 @@
 }
 
 :root {
-  --o: #eac435;      /* Sprite-Gelb: Sterne, Akzente */
-  --r: #b80c09;      /* Coca-Cola-Rot, nur als Akzent */
+  --o: #eac435;            /* Folie / Akzent (Theme) */
+  --ink-on: #121212;       /* Druckfarbe auf der Folie */
+  --ink-blend: multiply;
   --ink: #0d0d0d;
   --chalk: #f4fffd;
+  --card: #eee8dc;         /* Kartenkarton */
   --gut: 4vw;
   --fiber: url(/img/tex/fiber.webp);
-  --tear: polygon(1.2% 0, 98.6% 0, 100% 9%, 98.9% 21%, 99.6% 33%, 98.4% 46%, 99.8% 58%, 98.7% 71%, 99.5% 84%, 98.2% 100%, 1.6% 100%, 0 88%, 1.3% 76%, .3% 63%, 1.5% 51%, .2% 39%, 1.4% 27%, 0 14%);
+  --star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0 C53 34 66 47 100 50 C66 53 53 66 50 100 C47 66 34 53 0 50 C34 47 47 34 50 0Z'/%3E%3C/svg%3E");
   --paper-shadow: drop-shadow(0 14px 18px rgba(0,0,0,.5)) drop-shadow(0 2px 2px rgba(0,0,0,.4));
+  /* Regenbogen einer Beugungsfolie: gedeckt, schmale Baender */
+  --rainbow: repeating-linear-gradient(112deg,
+    hsl(345 85% 66%) 0%, hsl(28 92% 64%) 4%, hsl(55 90% 64%) 8%, hsl(120 60% 62%) 12%,
+    hsl(185 80% 62%) 16%, hsl(225 85% 70%) 20%, hsl(285 70% 70%) 24%, hsl(345 85% 66%) 28%);
+  --rainbow-chrome: repeating-linear-gradient(112deg,
+    hsl(345 85% 66% / .16) 0%, hsl(28 92% 64% / .16) 4%, hsl(55 90% 64% / .16) 8%, hsl(120 60% 62% / .16) 12%,
+    hsl(185 80% 62% / .16) 16%, hsl(225 85% 70% / .16) 20%, hsl(285 70% 70% / .16) 24%, hsl(345 85% 66% / .16) 28%);
+  --rainbow-soft: repeating-linear-gradient(112deg,
+    hsl(345 85% 66% / .38) 0%, hsl(28 92% 64% / .38) 4%, hsl(55 90% 64% / .38) 8%, hsl(120 60% 62% / .38) 12%,
+    hsl(185 80% 62% / .38) 16%, hsl(225 85% 70% / .38) 20%, hsl(285 70% 70% / .38) 24%, hsl(345 85% 66% / .38) 28%);
+  --rainbow-tint: repeating-linear-gradient(112deg,
+    hsl(345 90% 78%) 0%, hsl(28 95% 74%) 4%, hsl(55 95% 72%) 8%, hsl(120 70% 74%) 12%,
+    hsl(185 85% 72%) 16%, hsl(225 90% 80%) 20%, hsl(285 80% 80%) 24%, hsl(345 90% 78%) 28%);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -34,56 +55,294 @@ img { display: block; max-width: 100%; height: auto; }
 figure { margin: 0; }
 a { color: inherit; }
 ::selection { background: var(--o); color: var(--ink); }
+main { position: relative; overflow: clip; }
 
-/* ---------- Name + Gesicht ---------- */
-.hero { padding: 4.6vw var(--gut) 3vw; display: grid; justify-items: center; }
-.name {
-  margin: 0; position: relative; z-index: 3;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-stretch: 125%;
-  font-size: min(9.5vw, 156px); line-height: .82; letter-spacing: -.035em;
+/* ---------- Licht: eine Lampe ueber dem Tisch, zu den Raendern faellt es ab ---------- */
+.lamp {
+  position: fixed; inset: 0; z-index: 40; pointer-events: none;
+  background: radial-gradient(ellipse 72% 82% at 48% 42%, transparent 50%, rgba(0,0,0,.28) 80%, rgba(0,0,0,.52));
+}
+
+/* ---------- Tiefenebenen ---------- */
+.depth { position: absolute; inset: 0; pointer-events: none; }
+.depth > * { position: absolute; will-change: transform; }
+.far { z-index: 0; }
+.near { z-index: 30; }
+/* zweites, ungeoeffnetes Pack derselben Serie, weit hinten: gleiche Folie, dunkel, unscharf */
+.d-pack   { top: 2vw; right: -6vw; width: 19vw; aspect-ratio: 450 / 684; rotate: 16deg; opacity: .5; }
+.d-pack img, .d-pack .tint { position: absolute; inset: 0; width: 100%; height: 100%; }
+.d-pack .tint {
+  background: var(--o); mix-blend-mode: multiply;
+  -webkit-mask: url(/img/seal/pack-back.webp) 0 0 / 100% 100%; mask: url(/img/seal/pack-back.webp) 0 0 / 100% 100%;
+}
+.d-mailer { top: 31%; left: -10vw; width: 25vw; rotate: -12deg; opacity: .55; }
+.d-pack2  { top: 74%; left: auto; right: -9vw; width: 21vw; rotate: -23deg; opacity: .4; }
+/* Ecke eines Acrylblocks ganz nah an der Linse */
+.n-acryl {
+  top: 64%; right: -9vw; width: 27vw; aspect-ratio: .78; rotate: 17deg; border-radius: 2.4vw;
+  border: 3px solid rgba(255,255,255,.34);
+  background:
+    linear-gradient(118deg, transparent 30%, rgba(255,255,255,.16) 36%, transparent 44%),
+    linear-gradient(140deg, rgba(255,255,255,.12), rgba(255,255,255,.02) 38%, rgba(255,255,255,.05) 60%, transparent);
+  box-shadow: inset 0 0 0 10px rgba(255,255,255,.05), inset 0 0 0 12px rgba(255,255,255,.12), 0 30px 40px rgba(0,0,0,.35);
+  filter: blur(6px);
+}
+
+/* ---------- Das Pack ---------- */
+.hero {
+  position: relative; z-index: 2; padding: 5vw var(--gut) 5vw; display: grid; justify-items: center;
+  --pw: min(34vw, 50vh, 500px);   /* Packbreite */
+}
+.booster {
+  position: relative; z-index: 2; width: var(--pw); aspect-ratio: 900 / 1368;
+  rotate: -2.4deg; container-type: inline-size;
+}
+.booster::before {   /* Schatten auf dem Tisch */
+  content: ""; position: absolute; inset: 7% 4% 2% 5%; border-radius: 8%;
+  background: rgba(0,0,0,.8); filter: blur(26px); will-change: transform;
+  transform: translate(calc(var(--sx, -6px) * 1.6 * (1 + var(--lift, 0) * .5)), calc((var(--sy, 10px) * 1.4 + 22px) * (1 + var(--lift, 0) * .5) + var(--ty, 0px)));
+  scale: calc(1 + var(--lift, 0) * .035); opacity: calc(1 - var(--lift, 0) * .2);
+}
+.tilt {
+  transform: perspective(1500px) translateY(var(--ty, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(calc(var(--lift, 0) * 20px));
+  will-change: transform;
+}
+.booster .tilt { position: absolute; inset: 0; }
+.booster .tilt::before {  /* Kontaktschatten */
+  content: ""; position: absolute; inset: 6.5% .6% .4% .6%; border-radius: 1.5%;
+  background: rgba(0,0,0,.55); filter: blur(3px); transform: translate(1px, 3px);
+  opacity: clamp(0, 1 - var(--lift, 0) * .7, 1);
+}
+.booster .inner { position: absolute; inset: 0; width: 100%; height: 100%; }
+.booster .lip { position: absolute; left: 0; top: 0; width: 100%; height: 8.114%; pointer-events: none; }   /* Schatten der Risskante ins Pack */
+
+/* abgerissener Siegelstreifen: liegt neben dem Pack auf dem Tisch, leicht eingerollt, halb drunter geschoben */
+.strip {
+  position: absolute; z-index: 1; width: calc(var(--pw) * .9); aspect-ratio: 900 / 105;
+  left: calc(50% - var(--pw) * 1.08); top: calc(5vw + var(--pw) * .9); rotate: 21deg;
+  filter: drop-shadow(0 7px 6px rgba(0,0,0,.55)) drop-shadow(0 1px 1px rgba(0,0,0,.6));
+}
+.strip > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+.strip .tint, .strip .curl {
+  -webkit-mask: url(/img/seal/pack-strip.webp) 0 0 / 100% 100%; mask: url(/img/seal/pack-strip.webp) 0 0 / 100% 100%;
+}
+.strip .tint { background: var(--o); mix-blend-mode: multiply; }
+.strip .curl {   /* Woelbung: Oberkante faengt Licht, Unterkante rollt in den Schatten */
+  background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.04) 30%, rgba(0,0,0,0) 50%, rgba(0,0,0,.32)),
+    linear-gradient(90deg, rgba(0,0,0,.25), transparent 18%, transparent 75%, rgba(0,0,0,.2));
+}
+.front {
+  position: absolute; inset: 0; isolation: isolate; container-type: inline-size;
+  -webkit-mask: url(/img/seal/pack-foil.webp) 0 0 / 100% 100%; mask: url(/img/seal/pack-foil.webp) 0 0 / 100% 100%;
+}
+.front > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+.front .tint { background: var(--o); mix-blend-mode: multiply; }
+.front .foil-hi {   /* nur die hellsten Stellen der Folie: metallischer Glanz */
+  background: url(/img/seal/pack-foil.webp) 0 0 / 100% 100%;
+  filter: contrast(3.4) brightness(.62); mix-blend-mode: screen; opacity: .55;
+}
+.front .crinkle { background: url(/img/seal/pack-crinkle.webp) 0 0 / 100% 100%; mix-blend-mode: soft-light; opacity: .95; pointer-events: none; }
+/* Die Falten bleiben über den gesamten Druck verbunden. Im Gesicht und bei
+   den Augen wird der Glanz zurückgenommen, ohne eine rechteckige Aussparung. */
+.front .crinkle, .front .spec, .front .foil-hi {
+  -webkit-mask: radial-gradient(ellipse 47% 4.6% at 50% 73%, rgba(0,0,0,.3), rgba(0,0,0,.55) 55%, #000),
+                radial-gradient(ellipse 40% 3.2% at 50% 83.3%, rgba(0,0,0,.45), rgba(0,0,0,.7) 55%, #000),
+                radial-gradient(ellipse 36% 25% at 52% 38.8%, rgba(0,0,0,.55), rgba(0,0,0,.75) 70%, #000);
+  -webkit-mask-composite: source-in, source-in;
+  mask: radial-gradient(ellipse 47% 4.6% at 50% 73%, rgba(0,0,0,.3), rgba(0,0,0,.55) 55%, #000),
+        radial-gradient(ellipse 40% 3.2% at 50% 83.3%, rgba(0,0,0,.45), rgba(0,0,0,.7) 55%, #000),
+        radial-gradient(ellipse 36% 25% at 52% 38.8%, rgba(0,0,0,.55), rgba(0,0,0,.75) 70%, #000);
+  mask-composite: intersect;
+}
+.front .spec { background: 0 0 / 100% 100%; mix-blend-mode: screen; pointer-events: none; }
+.s-l { background-image: url(/img/seal/pack-spec-l.webp); opacity: calc(.2 + var(--sl, .3) * 1.8); }
+.s-r { background-image: url(/img/seal/pack-spec-r.webp); opacity: calc(.2 + var(--sr, 0) * 1.8); }
+.s-t { background-image: url(/img/seal/pack-spec-t.webp); opacity: calc(.2 + var(--st, .5) * 1.8); }
+.s-b { background-image: url(/img/seal/pack-spec-b.webp); opacity: calc(.2 + var(--sb, 0) * 1.8); }
+.front .glare {
+  pointer-events: none; mix-blend-mode: soft-light;
+  background: radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), rgba(255,255,255,.75), rgba(255,255,255,.2) 24%, rgba(0,0,0,.12) 62%, rgba(0,0,0,.22));
+}
+/* Direktblitz: um den Glanzpunkt brennen die Knitterkanten weiss aus, im Kern ein harter Spiegelpunkt */
+.front .flash {
+  pointer-events: none; z-index: 3;
+  --ffx: var(--fx, 45%); --ffy: calc(var(--fy, 35%) - 23%);   /* Glanzpunkt ruht auf der Folie oberhalb des Fotos */
+}
+.front .flash::before, .front .flash::after { content: ""; position: absolute; inset: 0; }
+.front .flash::before {   /* Knitterkanten blitzen rund um den Glanzpunkt hart auf */
+  background: url(/img/seal/pack-glint-a.webp) 0 0 / 100% 100%;
+  -webkit-mask: radial-gradient(circle at var(--ffx) var(--ffy), #000 0, #000 7%, rgba(0,0,0,.55) 16%, rgba(0,0,0,.18) 28%, transparent 42%);
+  mask: radial-gradient(circle at var(--ffx) var(--ffy), #000 0, #000 7%, rgba(0,0,0,.55) 16%, rgba(0,0,0,.18) 28%, transparent 42%);
+}
+.front .flash::after {   /* harter Kernpunkt: nie aufs Portrait */
+  -webkit-mask: linear-gradient(#000 0 0), linear-gradient(#000 0 0) 50% 24.6% / 85% 55.9% no-repeat; -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0), linear-gradient(#000 0 0) 50% 24.6% / 85% 55.9% no-repeat; mask-composite: exclude;
+  background: radial-gradient(circle at var(--ffx) var(--ffy), rgba(255,255,255,.95) 0, rgba(255,255,255,.6) .8cqw, rgba(255,255,255,.14) 2.6cqw, rgba(255,255,255,.03) 6cqw, transparent 10cqw);
+}
+
+/* ---------- Aufdruck im Topps/Panini-Chrome-Stil (Aufbau wie V6) ---------- */
+/* kein eigener z-index: der Druck liegt UNTER Knitter, Glanzlichtern und Blitz, damit die Folie durchwirkt */
+.art { z-index: auto; }
+.art {   /* Praegetoene fuer die Rollenzeile */
+  --deep: color-mix(in srgb, var(--o) 30%, #000);
+  --edge-lo: color-mix(in srgb, var(--o) 35%, #fff);
+}
+/* Prizm-Folie: feine Strahlen aus einem Punkt, kippen mit dem Licht; Regenbogen nur in der Naehe des Lichts */
+.front .prizm, .front .prizm-c { pointer-events: none; }
+.front .prizm {
+  mix-blend-mode: overlay; opacity: .15;
+  background: repeating-conic-gradient(from var(--pa, 0deg) at 50% 61%,
+    rgba(255,255,255,0) 0deg 1.6deg, rgba(255,255,255,.8) 2.1deg, rgba(255,255,255,0) 2.7deg 4.1deg,
+    rgba(0,0,0,.45) 4.6deg, rgba(0,0,0,0) 5.2deg 5.625deg);
+  -webkit-mask: radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), #000, rgba(0,0,0,.55) 40%, rgba(0,0,0,.25) 80%);
+  mask: radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), #000, rgba(0,0,0,.55) 40%, rgba(0,0,0,.25) 80%);
+}
+.front .prizm-c {
+  mix-blend-mode: soft-light; opacity: .2;
+  background: repeating-conic-gradient(from calc(var(--pa, 0deg) * 2.5) at 50% 61%,
+    hsl(345 85% 66%) 0 3.75deg, hsl(40 95% 62%) 3.75deg 7.5deg, hsl(140 65% 58%) 7.5deg 11.25deg,
+    hsl(200 85% 64%) 11.25deg 15deg, hsl(275 70% 68%) 15deg 18.75deg);
+  -webkit-mask: radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), #000, rgba(0,0,0,.3) 30%, transparent 62%);
+  mask: radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), #000, rgba(0,0,0,.3) 30%, transparent 62%);
+}
+
+/* Volumen: das Pack ist aufgeblasen. Raender kippen weg (dunkler), breite Glanzflaechen folgen dem Licht */
+.front .pillow-shade { background: url(/img/seal/pillow-shade.webp) 0 0 / 100% 100%; mix-blend-mode: multiply; opacity: .7; pointer-events: none; }
+.front .pillow { background: 0 0 / 100% 100%; mix-blend-mode: screen; pointer-events: none; }
+.p-l { background-image: url(/img/seal/pillow-l.webp); opacity: calc(.25 + var(--sl, .3) * 1.1 + var(--tm, 0) * .3); }
+.p-r { background-image: url(/img/seal/pillow-r.webp); opacity: calc(.25 + var(--sr, 0) * 1.1 + var(--tm, 0) * .3); }
+.p-t { background-image: url(/img/seal/pillow-t.webp); opacity: calc(.25 + var(--st, .5) * 1.1 + var(--tm, 0) * .3); }
+.p-b { background-image: url(/img/seal/pillow-b.webp); opacity: calc(.25 + var(--sb, 0) * 1.1 + var(--tm, 0) * .3); }
+
+/* Name: eine grosse, fette Grotesk-Zeile unten direkt auf die Folie gedruckt (wie bei Metall-Packs),
+   leicht eingepraegt. Darunter dieselbe Zeile nur als Kontur, halb angeschnitten. */
+.name, .name-echo {
+  position: absolute; left: 0; right: 0; margin: 0; text-align: center; white-space: nowrap;
+  font-weight: 900; font-stretch: 125%; font-size: 8.3cqw; line-height: 1; letter-spacing: -.025em;
   text-transform: uppercase;
 }
+.name {
+  top: 107cqw; color: rgba(12,12,11,.95);
+  filter: url(#emboss);
+}
+.name-echo {
+  top: 114.9cqw; color: transparent;
+  -webkit-text-stroke: .13cqw color-mix(in srgb, var(--o) 30%, #000);
+  clip-path: inset(0 0 46% 0);
+  opacity: .8;
+}
+
+/* Bildfeld in die Folie gepresst: keine Rahmenleiste, nur Kante und Schatten der Pressung */
+.face-link {
+  position: absolute; left: 7.5cqw; top: 16.5cqw; width: 85cqw; display: block;
+  filter: url(#foilwarp);
+}
+.face-link::after {   /* Pressung: oben links Schattenkante, unten rechts Lichtkante */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset .5cqw .7cqw .9cqw rgba(0,0,0,.5), inset -.35cqw -.45cqw .6cqw rgba(255,255,255,.22), 0 0 0 .1cqw rgba(0,0,0,.55);
+}
+.face-link::before {   /* Schwarz-Raster des Drucks auf der Folie */
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: url(/img/print/rosette-k.webp) 0 0 / 16cqw; mix-blend-mode: overlay; opacity: .24;
+}
+.face-link:focus-visible { outline: 2px solid var(--chalk); outline-offset: 4px; }
+.face-link .photo { width: 100%; aspect-ratio: 1; object-fit: cover; border: 0; filter: contrast(1.06) brightness(1.01); }
+
+/* Holo-Siegel: rund, ueberlappt die obere rechte Ecke des Bildfelds, Stern eingepraegt */
 .name-star {
-  width: min(13vw, 210px); height: min(17vw, 270px); flex: none;
-  margin: 0 -2.4vw 0 -1.6vw; padding: 0; border: 0; background: none;
-  position: relative; z-index: 2; cursor: pointer; color: inherit;
-  -webkit-tap-highlight-color: transparent;
+  position: absolute; left: 80.5cqw; top: 90cqw; width: 14cqw; aspect-ratio: 1; border-radius: 50%;
+  background:
+    linear-gradient(150deg, rgba(255,255,255,.75), rgba(255,255,255,0) 45%, rgba(0,0,0,.25)),
+    repeating-conic-gradient(from var(--pa, 0deg), rgba(255,255,255,.35) 0 6deg, rgba(255,255,255,0) 6deg 18deg),
+    var(--rainbow) var(--hx, 40%) var(--hy, 40%) / 260% 260%,
+    #c9cdd1;
+  background-blend-mode: overlay, overlay, soft-light, normal;
+  box-shadow: 0 .3cqw .5cqw rgba(0,0,0,.35), inset 0 0 0 .3cqw rgba(255,255,255,.35), inset 0 0 0 .45cqw rgba(0,0,0,.12);
 }
-.name-star svg { width: 100%; height: 100%; fill: var(--o); display: block; transition: transform .45s cubic-bezier(.3,1.6,.5,1), fill .2s; }
-.name-star:hover svg { transform: rotate(18deg) scale(1.04); }
-.name-star:active svg { transform: rotate(45deg) scale(.92); }
-.name-star:focus-visible { outline: 2px solid var(--o); outline-offset: 6px; border-radius: 50%; }
-/* Farb-Themes: Gelb (Standard), Gruen, Orange */
-html[data-theme="g"] { --o: #138a36; }
-html[data-theme="o"] { --o: #ff6600; }
+.name-star svg {   /* Stern als dunkle Praegung im Siegel */
+  display: block; position: absolute; inset: 22%; width: 56%; height: 56%;
+  fill: rgba(15,15,15,.78);
+  filter: drop-shadow(0 -.12cqw 0 rgba(255,255,255,.55));
+}
 
-.face-link { display: block; position: relative; z-index: 2; }
-.face-link:focus-visible { outline: 2px solid var(--o); outline-offset: 10px; }
+/* Rollen auf einem holografischen Siegelstreifen (wie Sicherheitssiegel auf echten Packs):
+   laeuft quer ueber die ganze Packbreite, Regenbogen + Silber wandern mit dem Licht, feine Sicherheitsschraffur,
+   Rollen einmal in schwarzer Mikroschrift. Liegt unter Knitter und Glanz, ist also mit eingeschweisst. */
 .roles {
-  margin: 3.4vw 0 0; position: relative; z-index: 3;
+  position: absolute; left: -2cqw; right: -2cqw; top: 123.5cqw; height: 6.2cqw; margin: 0;
+  rotate: -1.2deg;
   display: flex; align-items: center; justify-content: center; gap: .9em;
-  font-weight: 600; font-stretch: 112%; text-transform: uppercase;
-  font-size: max(13.5px, min(1.25vw, 19px)); letter-spacing: .02em; color: rgba(242,238,230,.78);
+  font-weight: 800; font-stretch: 125%; text-transform: uppercase;
+  font-size: 2.45cqw; letter-spacing: .14em;
+  color: rgba(12,12,11,.9);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 22%, rgba(255,255,255,0) 78%, rgba(0,0,0,.18)),
+    repeating-linear-gradient(-58deg, rgba(255,255,255,.22) 0 .25cqw, rgba(255,255,255,0) .25cqw .9cqw),
+    linear-gradient(100deg, transparent 0 40%, rgba(255,255,255,.85) 48%, rgba(255,255,255,0) 56%) var(--hx, 40%) 0 / 300% 100% no-repeat,
+    linear-gradient(90deg, #b9bec3, #f2f3f4 30%, #a9aeb3 60%, #e8eaec),
+    var(--rainbow-tint) var(--hx, 40%) var(--hy, 40%) / 180% 300%;
+  background-blend-mode: normal, overlay, normal, soft-light, normal;
+  box-shadow: 0 .25cqw .4cqw rgba(0,0,0,.3), inset 0 .12cqw 0 rgba(255,255,255,.6), inset 0 -.12cqw 0 rgba(0,0,0,.2);
 }
-.roles-star { width: .7em; height: .7em; fill: var(--o); flex: none; }
-.face { position: relative; width: min(42vw, 62vh, 620px); aspect-ratio: 1; margin-top: .6vw; transform: rotate(-2deg); }
-.face img { position: absolute; }
-.face .back { inset: 0; width: 100%; transform: translate(4.5%, 3%) rotate(4.5deg); filter: var(--paper-shadow); }
-.face .photo { left: 5%; top: 5%; width: 90%; }
-.face .window { inset: 0; width: 100%; filter: drop-shadow(0 3px 4px rgba(0,0,0,.45)) drop-shadow(0 0 1px rgba(0,0,0,.35)); }
-.face .tape { z-index: 4; }
-.face { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
-.face-link:hover .face { transform: rotate(-1deg) translateY(-4px); }
+.roles > span { margin-right: -.14em; }
+.roles-star { width: .75em; height: .75em; fill: currentColor; flex: none; }
 
-/* ---------- Plakat ---------- */
-.wheat { padding: 7vw var(--gut) 4vw; display: grid; justify-items: center; }
-.poster { position: relative; width: min(1060px, 82vw); aspect-ratio: 2000 / 1592; transform: rotate(-1.4deg); container-type: inline-size; }
-.poster > img { position: absolute; }
-.poster-back { width: 78%; left: -7%; top: 20%; transform: rotate(5deg); filter: var(--paper-shadow); }
-.poster-sheet { inset: 0; width: 100%; height: 100%; filter: var(--paper-shadow); }
+/* aus dem Pack ragende Karten */
+.peek {
+  position: absolute; top: 2.4%; width: 38%; height: 15%; border-radius: 2.2cqw;
+  box-shadow: 0 -1px 0 rgba(255,255,255,.25) inset, 0 4px 10px rgba(0,0,0,.5);
+}
+.pk-a { left: 15%; rotate: -5deg; background: var(--card); }
+.pk-a::before { content: ""; position: absolute; inset: 1.6cqw 1.6cqw 0; border-radius: .5cqw; background: url(/img/print/xKY4ZHJDITA-640.webp) 30% 0 / cover; }
+.pk-b { left: 47%; top: 1.4%; rotate: 4.5deg; --cbw: 1.6cqw; }
+
+/* Kartenrueckseite */
+.cardback {
+  background:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.035) 0 1px, transparent 1px 6px),
+    #171717;
+  border: var(--cbw, 3.6cqw) solid var(--card);
+}
+.cardback::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 34%; aspect-ratio: .82; translate: -50% -50%;
+  background: var(--o); -webkit-mask: var(--star) center / contain no-repeat; mask: var(--star) center / contain no-repeat;
+}
+.peek.cardback::before { top: 62%; width: 26%; }
+
+/* ---------- Plakat: laminiert ---------- */
+.wheat { position: relative; z-index: 2; padding: 8vw var(--gut) 4vw; display: grid; justify-items: center; }
+.poster { position: relative; width: min(860px, 62vw, 104vh); aspect-ratio: 2000 / 1592; rotate: -1.4deg; container-type: inline-size; }
+.poster-back { position: absolute; width: 78%; left: -7%; top: 20%; transform: rotate(5deg); filter: var(--paper-shadow); }
+.poster .tilt { position: absolute; inset: 0; }
+.poster-sheet { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Laminierfolie: sitzt eng um das Blatt (Papier liegt bei 4-93 % x 5.6-94.6 %), klarer Rand rundherum */
+.lam {
+  position: absolute; left: 2.1%; right: 4.9%; top: 3.7%; bottom: 3.5%; border-radius: 1.3cqw; overflow: hidden;
+  background: rgba(255,255,255,.03);
+  box-shadow: 0 20px 30px rgba(0,0,0,.45), 0 2px 3px rgba(0,0,0,.35),
+    inset 0 0 0 1px rgba(255,255,255,.28), inset 0 0 0 .5cqw rgba(255,255,255,.03), inset 0 1px 0 .6cqw rgba(255,255,255,.035);
+}
+.lam > * { position: absolute; inset: 0; }
+.lam .dust { background: url(/img/seal/dust-a.webp) 0 0 / 560px, url(/img/seal/scratch-a.webp) 40% 10% / 900px; opacity: .3; }
+.lam .film {   /* Glanz der Folie, leicht wellig, wandert mit dem Licht */
+  mix-blend-mode: normal;
+  background:
+    linear-gradient(116deg, transparent 0 41%, rgba(255,255,255,.07) 45.5%, rgba(255,255,255,.17) 47.5%, rgba(255,255,255,.06) 49.5%, transparent 54%) var(--hx, 40%) 0 / 300% 100% no-repeat,
+    linear-gradient(104deg, transparent 0 56%, rgba(255,255,255,.05) 59%, transparent 63%) calc(var(--hx, 40%) * .7) 0 / 260% 100% no-repeat;
+}
+.lam .film::after {   /* eingeschlossene Luftblase */
+  content: ""; position: absolute; left: 82%; top: 77%; width: 4.2cqw; height: 2.6cqw; rotate: -18deg; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.28); border-left-color: rgba(255,255,255,.08); border-bottom-color: rgba(255,255,255,.1);
+  background: radial-gradient(ellipse at 35% 30%, rgba(255,255,255,.35), transparent 40%);
+}
+.lam .glare {
+  mix-blend-mode: normal;
+  background:
+    radial-gradient(circle at var(--fx, 45%) var(--fy, 35%), rgba(255,255,255,.9) 0, rgba(255,255,255,.5) .9cqw, rgba(255,255,255,.12) 3.5cqw, transparent 9cqw),
+    radial-gradient(ellipse 34% 26% at var(--gx, 30%) var(--gy, 22%), rgba(255,255,255,.2), rgba(255,255,255,.05) 55%, transparent 75%);
+}
 .ransom {
-  position: absolute; inset: 15% 8% 9%; margin: 0;
+  position: absolute; inset: 15% 8% 9%; margin: 0; z-index: 2;
   display: flex; flex-direction: column; justify-content: center; gap: .6cqw;
 }
 .ransom .row { display: flex; align-items: center; justify-content: center; gap: .5%; }
@@ -91,7 +350,7 @@ html[data-theme="o"] { --o: #ff6600; }
 .ransom img {
   height: 20cqw; width: auto; flex: none;
   transform: translateY(var(--y, 0)) rotate(var(--r, 0deg));
-  filter: drop-shadow(0 1.5px 1px rgba(0,0,0,.38)) drop-shadow(0 4px 6px rgba(0,0,0,.12));
+  filter: drop-shadow(0 1.5px 1px rgba(0,0,0,.42)) drop-shadow(0 5px 7px rgba(0,0,0,.16));
   /* Stop-Motion in Schueben: kurz ruckeln (ca. 9 Bilder/s), dann Pause; jeder Ausschnitt im eigenen Rhythmus */
   transform-origin: 50% 80%;
   animation: var(--jn, jitter-a) var(--fd, .75s) steps(1, end) var(--fdl, 0s) infinite;
@@ -110,7 +369,8 @@ html[data-theme="o"] { --o: #ff6600; }
 .ransom .row:nth-child(3) img:nth-child(3) { --jn: jitter-b; --fd: 5.6s; --fdl: -2.66s; }
 .ransom .row:nth-child(3) img:nth-child(4) { --jn: jitter-b; --fd: 5.6s; --fdl: -4.07s; }
 .ransom .row:nth-child(3) img:nth-child(5) { --jn: jitter-c; --fd: 3.7s; --fdl: -0.96s; }
-.ransom .dot { height: 6.4cqw; margin-left: .6%; }
+.ransom .small img { height: 11.4cqw; }
+.ransom .dot { height: 6.4cqw; margin-left: .6%; --jn: jitter-c; --fd: 3.7s; --fdl: -1.9s; }
 @keyframes jitter-a {
   0.0% { rotate: -1.32deg; translate: 0.14cqw 0.04cqw; }
   2.5% { rotate: -0.88deg; translate: -0.0cqw -0.07cqw; }
@@ -138,8 +398,6 @@ html[data-theme="o"] { --o: #ff6600; }
   14.86% { rotate: -1.26deg; translate: 0.05cqw 0.08cqw; }
   17.84%, 100% { rotate: 0deg; translate: 0 0; }
 }
-.ransom .small img { height: 11.4cqw; }
-.ransom .dot { --jn: jitter-c; --fd: 3.7s; --fdl: -1.9s; }
 
 /* ---------- Klebeband: gescannte Optik, Enden bleiben unverzerrt ---------- */
 .tape {
@@ -153,107 +411,290 @@ html[data-theme="o"] { --o: #ff6600; }
   pointer-events: none;
 }
 .tape.t  { left: 50%; top: -15px; transform: translateX(-50%) rotate(-2.5deg); }
-.tape.tl, .tape.tr, .tape.br, .tape.bl { width: clamp(70px, 24%, 128px); }
+.tape.tl, .tape.tr { width: clamp(70px, 24%, 128px); }
 .tape.tl { left: 0; top: 0; transform: translate(-40%, -20%) rotate(-38deg); }
 .tape.tr { left: auto; right: 0; top: 0; transform: translate(40%, -20%) rotate(38deg); }
-.tape.br { left: auto; right: 0; top: auto; bottom: 0; transform: translate(40%, 20%) rotate(-36deg); }
-.tape.bl { left: 0; top: auto; bottom: 0; transform: translate(-40%, 20%) rotate(36deg); }
 
-/* Tackernadel */
-.staple {
-  position: absolute; z-index: 6;
-  width: 30px; height: 5px; border-radius: 1px;
-  background: linear-gradient(180deg, #ececec, #8a8a8a);
-  box-shadow: 0 1px 1px rgba(0,0,0,.55);
-  transform: rotate(-4deg);
-}
-.staple::before, .staple::after { content: ""; position: absolute; top: 1px; width: 3px; height: 3px; border-radius: 50%; background: rgba(0,0,0,.45); }
-.staple::before { left: -2px; } .staple::after { right: -2px; }
-
-/* ---------- Wand ---------- */
-.wall { padding: 2vw calc(var(--gut) + 1vw) 10vw; }
-.pair { position: relative; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 2.4vw; align-items: start; margin-top: 9vw; }
-.pair:first-child { margin-top: 4vw; }
-.pair.tuck { margin-top: -6vw; }
-.scrap {
+/* ---------- Karten ---------- */
+.wall { position: relative; z-index: 2; padding: 2vw calc(var(--gut) + 1vw) 12vw; max-width: min(1240px, 130vh); margin-inline: auto; }
+.pair { position: relative; display: grid; grid-template-columns: repeat(12, 1fr); column-gap: 3vw; align-items: start; margin-top: 11vw; }
+.pair:first-child { margin-top: 5vw; }
+.pair.tuck { margin-top: -5vw; }
+.pair.quad { row-gap: 4.5vw; }
+.card {
   grid-row: var(--row, 1); grid-column: var(--c);
   margin-top: var(--mt, 0);
   position: relative; z-index: var(--z, 1);
-  transform: rotate(var(--r, 0deg));
-  filter: var(--paper-shadow);
+  rotate: var(--r, 0deg);
+  container-type: inline-size;
+  --ci: 0px; --cr: 4.2cqw; --hgt: 1;   /* Huellen-Ueberstand, Eckenradius, Abstand zum Tisch */
 }
-.scrap img { position: relative; z-index: 1; width: 100%; }
-/* alle Fotos als Abzug: Schwarz minimal angehoben, Farben eine Spur gedeckter */
-.scrap > img:not(.vinyl), .face .photo { filter: contrast(.95) saturate(.94) brightness(1.015); }
-/* feine Papier-/Druckkoernung auf dem Bild */
-.grain {
-  position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  background: var(--fiber) 0 0 / 300px; mix-blend-mode: soft-light; opacity: .5;
+.card.sleeve { --ci: -2.4cqw -2.6cqw -2.8cqw; --cr: 5cqw; --hgt: 1.15; }
+.card.top    { --ci: -8cqw -5.2cqw -4.6cqw; --cr: 3cqw; --hgt: 1.35; }
+.card.one    { --ci: -9cqw; --cr: 6cqw; --hgt: 1.9; }
+.card.w.one  { --ci: -5.4cqw; --cr: 3.6cqw; }
+/* Schatten: Karte dunkel, Huelle durchscheinend heller; Versatz folgt dem Licht */
+.card::before, .card::after {
+  content: ""; position: absolute; pointer-events: none; will-change: transform;
+  transform: translate(calc(var(--sx, -6px) * var(--hgt) * (1 + var(--lift, 0))), calc((var(--sy, 10px) + 10px) * var(--hgt) * (1 + var(--lift, 0)) + var(--ty, 0px)));
 }
-.print .grain { inset: 10px; }
-.tear .grain { -webkit-mask: url(/img/assets/tear-b.webp) center / 100% 100% no-repeat; mask: url(/img/assets/tear-b.webp) center / 100% 100% no-repeat; }
-.dogear .grain { clip-path: polygon(0 0, calc(100% - 70px) 0, 100% 70px, 100% 100%, 0 100%); }
+.card::before { inset: 1.5cqw; border-radius: var(--cr); background: rgba(0,0,0,.8); filter: blur(calc(7px * var(--hgt)));
+  opacity: clamp(.2, 1 - var(--lift, 0) * .5, 1); scale: calc(1 + var(--lift, 0) * .02); }
+.card::after  { inset: var(--ci); border-radius: var(--cr); background: rgba(0,0,0,.3); filter: blur(calc(16px * var(--hgt)));
+  opacity: clamp(.5, 1 - var(--lift, 0) * .22, 1.2); scale: calc(1 + var(--lift, 0) * .06); }
+.card.loose::after { display: none; }
+.card .tilt { position: relative; z-index: 1; }
 
-/* echtes gerissenes Papier hinter dem Foto */
-.frame::before { content: ""; position: absolute; inset: -8% -7% -9% -7%; background: center / 100% 100% no-repeat; }
-.frame.w::before { inset: -11% -5% -12% -5%; }
-.frame.fc::before { background-image: url(/img/paper/frame-c-p.webp); }
-.frame.w.fc::before { background-image: url(/img/paper/frame-c-l.webp); }
+.print {
+  position: relative; padding: 3.5cqw; border-radius: 4.2cqw; overflow: hidden; isolation: isolate;
+  background: var(--card);
+  box-shadow: inset 0 0 0 .6px rgba(0,0,0,.35), 0 .5px 1px rgba(0,0,0,.5);
+}
+.print::before {   /* Kartonfaser auf dem Rand */
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background: var(--fiber) 0 0 / 300px; mix-blend-mode: multiply; opacity: .35;
+}
+/* Foto + Raster als eigene Ebene: wird einmal gerendert, Glanz und Holo darueber bewegen sich ohne es neu zu rechnen */
+.zoom, .pic { display: block; position: relative; z-index: 1; border-radius: .8cqw; will-change: transform; }
+.zoom { cursor: zoom-in; }
+.w .pic { border-radius: .6cqw; }
+/* Druckraster: Rosette aus C, M, Y, K (img/print/rosette.webp, aus tools/print.py) als Kachel. Per overlay wirkt sie
+   nur in den Mitteltoenen, Lichter und Tiefen bleiben ruhig -- wie ein echtes Raster. Passer, Zuwachs, Papier: im Bild */
+.zoom::after, .pic::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+  background: url(/img/print/rosette.webp) 0 0 / 16cqw; mix-blend-mode: overlay; opacity: 0;
+}
+.inked::after { opacity: .3; }
+.cosmos .inked::after { opacity: .2; }
+.zoom:focus-visible { outline: 2px solid var(--o); outline-offset: 3px; }
+.print img { position: relative; z-index: 1; width: 100%; border-radius: .8cqw; filter: contrast(1.03) saturate(1.02); }
+/* Hochglanz-Abzug unter Direktblitz: harter, fast weisser Punkt mit Hof */
+.print::after {
+  content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: inherit;
+  background:
+    radial-gradient(circle at var(--fx, 40%) var(--fy, 30%), rgba(255,255,255,.97) 0, rgba(255,255,255,.75) 1.5cqw, rgba(255,255,255,.26) 5.5cqw, rgba(255,255,255,.07) 12cqw, transparent 22cqw),
+    radial-gradient(ellipse 70% 50% at var(--fx, 40%) var(--fy, 30%), rgba(255,255,255,.12), transparent 70%),
+    linear-gradient(var(--sa, 114deg), transparent 0 42%, rgba(255,255,255,.1) 46.5%, rgba(255,255,255,.03) 49.5%, transparent 54%) var(--hx, 40%) 0 / 300% 100% no-repeat;
+}
+.w .print { padding: 2.6cqw; border-radius: 3cqw; }
+.w .print img { border-radius: .6cqw; }
+/* Glanz der Kartenoberflaeche + leichte Woelbung */
+.sheen {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; mix-blend-mode: soft-light;
+  background:
+    radial-gradient(circle at var(--fx, 40%) var(--fy, 30%), rgba(255,255,255,.5), rgba(255,255,255,.1) 28%, rgba(0,0,0,.18) 75%),
+    linear-gradient(90deg, rgba(0,0,0,.18), transparent 16%, transparent 84%, rgba(0,0,0,.2));
+}
+/* lose Karte: bestossene Ecken (weisser Karton blitzt durch) */
+.card:not(.loose) .print::after { opacity: .45; }
+.loose .print { box-shadow: inset 0 0 0 .6px rgba(0,0,0,.35), 0 .5px 1px rgba(0,0,0,.5), inset 0 0 0 1.2px rgba(255,255,255,.55); }
 
-/* Abzug in zerkratzter Klarsichtfolie: schwarz = durchsichtig */
-.sleeve {
-  position: absolute; inset: -3% -4% -3% -3%; z-index: 2; pointer-events: none;
-  background: url(/img/assets/sleeve.webp) center / 100% 100%;
-  mix-blend-mode: screen; opacity: .62;
+/* Holo: Regenbogen nur in hellen Bildpartien, am staerksten im Glanzlicht */
+.holo-l {
+  position: absolute; z-index: 2; inset: 3.5cqw; border-radius: .8cqw; pointer-events: none;
+  background: var(--rainbow-tint) var(--hx, 40%) var(--hy, 40%) / 300% 300%;
+  mix-blend-mode: multiply; opacity: .9;
+  -webkit-mask: var(--hm) center / 100% 100%, radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), #000, rgba(0,0,0,.4) 38%, rgba(0,0,0,.14) 72%);
+  -webkit-mask-composite: source-in;
+  mask: var(--hm) center / 100% 100%, radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), #000, rgba(0,0,0,.4) 38%, rgba(0,0,0,.14) 72%);
+  mask-composite: intersect;
 }
-/* Ebenen: dahinter ein eigener, versetzt gedrehter Bogen ... */
-.back {
-  position: absolute; inset: -7% -6% -8% -6%; z-index: 0; pointer-events: none;
-  background: center / 100% 100% no-repeat;
-  transform: translate(var(--bx, 0), var(--by, 0)) rotate(var(--br, 0deg));
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,.35));
-}
-.back.fc { background-image: url(/img/paper/frame-c-p.webp); }
-.w .back.fc { background-image: url(/img/paper/frame-c-l.webp); inset: -10% -5% -11% -5%; }
-.back.fw { background-image: url(/img/paper/frame-w-p.webp); }
-.w .back.fw { background-image: url(/img/paper/frame-w-l.webp); inset: -10% -5% -11% -5%; }
-.back.grid { background-image: url(/img/assets/grid.webp); inset: -6% -22% -10% -14%; }
-/* ... auf dem Foto echte Knitterfalten (wie Ebenenmodus "Weiches Licht") ... */
-.crease {
-  position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  background: var(--cr) var(--cp, 50% 50%) / cover no-repeat;
-  mix-blend-mode: soft-light; opacity: calc(var(--co, .7) * .62);
-}
-.dogear .crease { clip-path: polygon(0 0, calc(100% - 70px) 0, 100% 70px, 100% 100%, 0 100%); }
-.sleeve.s2 { background-image: url(/img/assets/sleeve-2.webp); inset: -4% -3% -5% -3%; opacity: .7; }
-/* ... und ein Abzug mit abgerissener Unterkante: weisser Papierkern blitzt am Riss */
-.tear img, .tear .crease { -webkit-mask: url(/img/assets/tear-b.webp) center / 100% 100% no-repeat; mask: url(/img/assets/tear-b.webp) center / 100% 100% no-repeat; }
-.tear .core {
-  position: absolute; inset: 0; z-index: 0; background: #f4f1ea;
-  -webkit-mask: url(/img/assets/tear-b-core.webp) center / 100% 100% no-repeat; mask: url(/img/assets/tear-b-core.webp) center / 100% 100% no-repeat;
+.w .holo-l { inset: 2.6cqw; }
+/* Cosmos-Glitzer: Regenbogen nur durch die Glitzerpunkte sichtbar, am hellsten im Glanzlicht */
+.glitter {
+  position: absolute; z-index: 3; inset: 2.6cqw; border-radius: .6cqw; pointer-events: none;
+  background:
+    radial-gradient(circle at var(--gx, 30%) var(--gy, 22%), rgba(255,255,255,.9), rgba(255,255,255,.35) 30%, rgba(255,255,255,.12) 70%),
+    var(--rainbow) var(--hy, 40%) var(--hx, 40%) / 220% 220%;
+  background-blend-mode: soft-light, normal;
+  -webkit-mask: url(/img/seal/glitter-a.webp) 0 0 / 420px, var(--hm) center / 100% 100%; -webkit-mask-composite: source-in;
+  mask: url(/img/seal/glitter-a.webp) 0 0 / 420px, var(--hm) center / 100% 100%; mask-composite: intersect;
+  opacity: .95;
 }
 
-.print img { border: 10px solid #f3efe6; }
-.dogear img { clip-path: polygon(0 0, calc(100% - 70px) 0, 100% 70px, 100% 100%, 0 100%); }
-.dogear::before {
-  content: ""; position: absolute; top: 0; right: 0; width: 120px; height: 120px; z-index: 2; pointer-events: none;
-  background: linear-gradient(225deg, transparent 29%, rgba(0,0,0,.42) 30%, rgba(0,0,0,0) 46%);
+/* ---------- Licht wie gerendert ---------- */
+/* Glanzgrad je Oberflaeche: wie stark der Blitz-Hof (Bloom) ueber die Kante strahlt */
+.card { --gloss: .4; } .sleeve { --gloss: .55; } .top { --gloss: .85; } .one { --gloss: 1; } .holo { --gloss: 1; }
+.booster { --gloss: .9; } .poster { --gloss: .7; }
+/* Bloom: um den Glanzpunkt strahlt Licht ueber die Kante aufs Umfeld (wie bei einer Aufnahme mit Blitz).
+   Die Ebene ist so gross wie das Objekt und wird nur verschoben -> keine Neuberechnung, nur Compositing */
+.card .tilt::after, .booster .tilt::after, .poster .tilt::after {
+  content: ""; position: absolute; inset: 0; z-index: 8; pointer-events: none;
+  translate: calc(var(--fx, 40%) - 50%) calc(var(--fy, 30%) - 50%);
+  background: radial-gradient(circle at 50% 50%, rgba(255,250,238,.55) 0, rgba(255,246,228,.22) 4cqw, rgba(255,240,220,.07) 14cqw, transparent 30cqw);
+  mix-blend-mode: screen; opacity: calc(var(--bloom, 0) * var(--gloss)); will-change: transform, opacity;
 }
-.dogear::after {
-  content: ""; position: absolute; top: 0; right: 0; width: 70px; height: 70px; z-index: 2;
-  z-index: 3;
-  background: linear-gradient(225deg, transparent 50%, #c9c1b0 50%, #ece6da 64%, #f5f1e8 76%, #ddd5c4);
-  filter: drop-shadow(-2px 3px 2px rgba(0,0,0,.4));
+.booster .tilt::after { translate: calc(var(--fx, 45%) - 50%) calc(var(--fy, 35%) - 73%); }
+/* Fresnel: je schraeger man auf Folie/Kunststoff schaut, desto mehr spiegelt die abgewandte Seite */
+.card .tilt::before {
+  content: ""; position: absolute; inset: var(--ci); z-index: 4; border-radius: var(--cr); pointer-events: none;
+  background: linear-gradient(calc(90deg - atan2(var(--nrx, 0), var(--nry, 0))), transparent 35%, rgba(232,240,250, calc(var(--tm, 0) * .16)));
 }
+.sleeve .tilt::before { transform: translate(var(--cdx, 0), var(--cdy, 0)) rotate(var(--ck, 0deg)); }
+/* Kaustik unter dem Acrylblock: klarer Rand laesst Licht durch, die Fase buendelt es an der fernen Ecke */
+.caustic {
+  position: absolute; z-index: 1; inset: var(--ci); border-radius: var(--cr); pointer-events: none;
+  transform: translate(calc(var(--sx, -6px) * var(--hgt) * 1.25 * (1 + var(--lift, 0))), calc((var(--sy, 10px) + 10px) * var(--hgt) * 1.25 * (1 + var(--lift, 0)) + var(--ty, 0px)));
+  box-shadow: inset 0 0 0 .35cqw rgba(255,244,222,.2), inset 0 0 3cqw .6cqw rgba(255,236,205,.06);
+  filter: blur(2.2px); mix-blend-mode: screen; will-change: transform;
+  /* Licht kommt von oben links -> die Fase buendelt es an der fernen Ecke des Schattens (statisch: kein Neuzeichnen) */
+  -webkit-mask: radial-gradient(farthest-side at 96% 98%, #000, rgba(0,0,0,.35) 45%, transparent 80%);
+  mask: radial-gradient(farthest-side at 96% 98%, #000, rgba(0,0,0,.35) 45%, transparent 80%);
+}
+
+/* Huellen */
+.case {
+  position: absolute; inset: var(--ci); z-index: 3; border-radius: var(--cr); pointer-events: none;
+  transform: translate(var(--cdx, 0), var(--cdy, 0)) rotate(var(--ck, 0deg));   /* sitzt nie ganz gerade */
+}
+.case::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }   /* Kratzer: weiss mit Alpha, normal ueberblendet */
+/* Penny Sleeve: weiche Folie, oben offen, eigener Knick, Falten glaenzen im Blitz auf */
+.sleeve .case {
+  background:
+    radial-gradient(circle at calc(var(--fx, 40%) + 4%) calc(var(--fy, 30%) - 3%), rgba(255,255,255,.5), rgba(255,255,255,.14) 6cqw, transparent 17cqw),
+    linear-gradient(var(--fa, 14deg), transparent calc(var(--fp, 50%) - .5%), rgba(255,255,255,.2) var(--fp, 50%), rgba(0,0,0,.08) calc(var(--fp, 50%) + .35%), transparent calc(var(--fp, 50%) + 1.2%)),
+    linear-gradient(var(--sa, 114deg), transparent 0 40%, rgba(255,255,255,.08) 45%, rgba(255,255,255,.2) 48%, rgba(255,255,255,.05) 51%, transparent 58%) var(--hx, 40%) 0 / 300% 100% no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), inset 0 0 20px rgba(255,255,255,.04);
+  border-top-left-radius: 2cqw; border-top-right-radius: 2cqw;
+}
+.sleeve .case::after {
+  background: url(/img/seal/sleeve-a.webp) var(--wp, 50% 50%) / var(--ws, 130%) auto;
+  -webkit-mask: radial-gradient(circle at var(--fx, 40%) var(--fy, 30%), #000 0, rgba(0,0,0,.7) 22%, rgba(0,0,0,.32) 55%);
+  mask: radial-gradient(circle at var(--fx, 40%) var(--fy, 30%), #000 0, rgba(0,0,0,.7) 22%, rgba(0,0,0,.32) 55%);
+  opacity: .85;
+}
+.sleeve .case::before {   /* offene Oberkante, leicht gewellt */
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3cqw; border-radius: inherit;
+  border-top: 1px solid rgba(255,255,255,.4);
+  background: linear-gradient(rgba(255,255,255,.09), transparent);
+}
+/* Toploader: steifes PVC, spiegelt hart, die dicken Kanten leuchten auf der Lichtseite */
+.top .case {
+  background:
+    radial-gradient(circle at calc(var(--fx, 40%) + 2%) calc(var(--fy, 30%) - 2%), rgba(255,255,255,.95) 0, rgba(255,255,255,.65) 1.8cqw, rgba(255,255,255,.16) 6cqw, transparent 14cqw),
+    linear-gradient(var(--sa, 112deg), transparent 0 38%, rgba(255,255,255,.1) 44%, rgba(255,255,255,.26) 47%, rgba(255,255,255,.06) 50%, transparent 57%) var(--hx, 40%) 0 / 300% 100% no-repeat,
+    linear-gradient(90deg, rgba(255,255,255, calc(.08 + var(--sl, .3) * .5)), rgba(255,255,255,.02) 1.6cqw, transparent 3cqw, transparent calc(100% - 3cqw), rgba(255,255,255,.02) calc(100% - 1.6cqw), rgba(255,255,255, calc(.06 + var(--sr, 0) * .5))),
+    linear-gradient(180deg, rgba(255,255,255, calc(.08 + var(--st, .5) * .4)), transparent 2.4cqw, transparent calc(100% - 2.4cqw), rgba(255,255,255, calc(.05 + var(--sb, 0) * .4))),
+    rgba(190, 215, 235, .03);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), inset 0 0 0 2px rgba(0,0,0,.2), inset 0 0 0 3px rgba(255,255,255,.08),
+    inset 3px 0 2px -2px rgba(255,96,70,.22), inset -3px 0 2px -2px rgba(70,160,255,.24), inset 0 3px 2px -2px rgba(255,214,90,.14);
+}
+.top .case::after { background: url(/img/seal/scratch-a.webp) var(--so, 0 0) / 480px; opacity: .36; }
+.top .case::before {
+  content: ""; position: absolute; left: 50%; top: 0; width: 24cqw; height: 6.5cqw; translate: -50% 0;
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  border: 1px solid rgba(255,255,255,.34); border-top: 0;
+  background: linear-gradient(rgba(0,0,0,.12), rgba(255,255,255,.06));
+}
+/* One-Touch: dicker Acrylblock -> zwei Spiegelpunkte (Vorder- und Rueckflaeche), helle Fasenkanten */
+.one .case {
+  background:
+    radial-gradient(circle at calc(var(--fx, 40%) + 1%) calc(var(--fy, 30%) - 1%), rgba(255,255,255,.97) 0, rgba(255,255,255,.7) 1.6cqw, rgba(255,255,255,.16) 5.5cqw, transparent 13cqw),
+    radial-gradient(circle at calc(var(--fx, 40%) + 5%) calc(var(--fy, 30%) + 3%), rgba(255,255,255,.35) 0, rgba(255,255,255,.1) 2.4cqw, transparent 7cqw),
+    linear-gradient(var(--sa, 115deg), transparent 0 37%, rgba(255,255,255,.1) 43%, rgba(255,255,255,.28) 46.5%, rgba(255,255,255,.07) 50%, transparent 57%) var(--hx, 40%) 0 / 300% 100% no-repeat,
+    linear-gradient(90deg, rgba(255,255,255, calc(.12 + var(--sl, .3) * .55)), rgba(255,255,255,.04) 2.4cqw, transparent 5cqw, transparent calc(100% - 5cqw), rgba(255,255,255,.03) calc(100% - 2.4cqw), rgba(255,255,255, calc(.08 + var(--sr, 0) * .55))),
+    linear-gradient(180deg, rgba(255,255,255, calc(.1 + var(--st, .5) * .45)), rgba(255,255,255,.03) 2.4cqw, transparent 5cqw, transparent calc(100% - 5cqw), rgba(255,255,255,.03) calc(100% - 2.4cqw), rgba(255,255,255, calc(.06 + var(--sb, 0) * .45))),
+    rgba(200, 220, 235, .03);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 0 0 2.5px rgba(0,0,0,.22), inset 0 0 0 3.5px rgba(255,255,255,.1),
+    inset 4px 0 3px -2px rgba(255,90,64,.26), inset -4px 0 3px -2px rgba(64,156,255,.28),
+    inset 0 4px 3px -2px rgba(255,214,90,.16), inset 0 -4px 3px -2px rgba(150,110,255,.2);
+}
+.one .case::after { background: url(/img/seal/scratch-a.webp) var(--so, 0 0) / 560px; opacity: .4; }
+.cosmos .case::after { opacity: .2; }
+.one .case::before {   /* Mulde, in der die Karte liegt */
+  content: ""; position: absolute; inset: calc(var(--ci) * -1 - 1cqw); border-radius: 5cqw;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2), 0 0 0 2px rgba(0,0,0,.25), inset 0 0 0 1px rgba(0,0,0,.25);
+}
+.w.one .case::before { border-radius: 3.4cqw; }
+.one .case, .top .case { transform: none; }   /* starre Halter sitzen gerade, die Karte darin nicht */
+.one .print, .top .print {
+  transform: translate(calc(var(--cdx, 0px) - var(--nry, 0) * var(--thick)), calc(var(--cdy, 0px) + var(--nrx, 0) * var(--thick))) rotate(var(--ck, 0deg));
+}
+.one { --thick: 1.3cqw; }   /* Dicke des Blocks: so weit wandert die Karte darin scheinbar */
+.top { --thick: .55cqw; }
+/* Karte hat Spiel in der Huelle: rutscht beim Anfahren/Bremsen des Scrollens kurz nach */
+.sleeve .print, .top .print { translate: 0 var(--iy, 0px); }
+
+/* abgerissene Folienreste auf dem Tisch (gleiche Folie wie das Pack, scharf: Mittelgrund) */
+.scrap-foil {
+  position: absolute; z-index: 0; left: var(--x); top: var(--y); width: var(--w); aspect-ratio: 900 / 105; rotate: var(--rot);
+  filter: drop-shadow(0 6px 6px rgba(0,0,0,.5)) drop-shadow(0 1px 1px rgba(0,0,0,.5));
+}
+.scrap-foil img, .scrap-foil .tint { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scrap-foil .tint {
+  background: var(--o); mix-blend-mode: multiply;
+  -webkit-mask: url(/img/seal/pack-strip.webp) 0 0 / 100% 100%; mask: url(/img/seal/pack-strip.webp) 0 0 / 100% 100%;
+}
+.scrap-foil.flip { scale: 1 -1; }
+
+/* zwei Holo-Karten liegen gefaechert unter dem Pack (Idee aus V7) */
+.hero .fan {
+  position: absolute; z-index: 0; margin: 0; left: 50%; top: calc(5vw + var(--pw) * .3);
+  width: calc(var(--pw) * .64); --hgt: 1;
+}
+.fan-a { translate: calc(-50% - var(--pw) * .6) 0; rotate: -13deg; }
+.fan-b { translate: calc(-50% + var(--pw) * .58) calc(var(--pw) * .1); rotate: 11deg; }
+
+/* seltene Karten: irisierender Holo-Rand statt Karton (aus V7), wandert mit dem Licht */
+.holo .print {
+  background:
+    linear-gradient(118deg, rgba(255,255,255,.55), rgba(255,255,255,0) 28%, rgba(255,255,255,.38) 52%, rgba(255,255,255,0) 76%) var(--hx, 40%) 0 / 220% 100%,
+    var(--rainbow-tint) var(--hx, 40%) var(--hy, 40%) / 260% 230%,
+    #d6d9dc;
+}
+.holo .print::before {   /* feines Beugungsgitter + Knitter der Folie */
+  background: repeating-linear-gradient(var(--sa, 112deg), rgba(255,255,255,.2) 0 1px, rgba(0,0,0,.05) 1px 3px), url(/img/seal/pack-crinkle.webp) center / 100% 100%;
+  mix-blend-mode: soft-light; opacity: .75;
+}
+
+/* darunter liegende Karte (Rueckseite oben) */
+.under {
+  position: absolute; inset: 0; z-index: -1; border-radius: 4.2cqw;
+  transform: translate(var(--ux, 0), var(--uy, 0)) rotate(var(--ur, 0deg));
+  box-shadow: 0 8px 18px rgba(0,0,0,.5), 0 1px 2px rgba(0,0,0,.5);
+}
+
+/* ---------- Grossansicht (Idee aus V7, ohne Texte) ---------- */
+.viewer {
+  position: fixed; inset: 0; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; padding: 0; border: 0;
+  background: transparent; display: grid; place-items: center; overflow: hidden;
+}
+.viewer:not([open]) { display: none; }
+.viewer:focus { outline: none; }
+.viewer::backdrop { background: rgba(9,9,9,.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+/* Groesse steht vorab fest (Seitenverhaeltnis aus der Karte), damit das Foto aus der Karte heraus wachsen kann (js/viewer.js) */
+.v-img {
+  box-sizing: content-box; aspect-ratio: var(--ar, 1.5);
+  width: min(92vw, 1500px, 86vh * var(--ar, 1.5)); height: auto; max-width: none; max-height: none; object-fit: cover;
+  border: clamp(6px, .7vw, 12px) solid var(--card); border-radius: 6px;
+  box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 2px 4px rgba(0,0,0,.5);
+  touch-action: pan-y pinch-zoom; user-select: none; will-change: transform;
+}
+.viewer[open]::backdrop { animation: v-fade .4s ease-out; }
+.viewer[open] .v-btn { animation: v-fade .35s .12s ease-out both; }
+.viewer.closing::backdrop, .viewer.closing .v-btn { opacity: 0; transition: opacity .36s ease; }
+@keyframes v-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .viewer[open]::backdrop, .viewer[open] .v-btn { animation: none; } }
+.v-btn {
+  position: fixed; width: 46px; height: 46px; border-radius: 50%; padding: 0; cursor: pointer;
+  display: grid; place-items: center; border: 1px solid rgba(242,238,230,.22); background: rgba(20,20,20,.7); color: var(--chalk);
+  transition: background .2s, color .2s, border-color .2s;
+}
+.v-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.v-btn:hover, .v-btn:focus-visible { background: var(--o); border-color: var(--o); color: var(--ink); outline: none; }
+.v-close { top: 18px; right: 18px; }
+.v-prev { left: 18px; top: 50%; translate: 0 -50%; }
+.v-next { right: 18px; top: 50%; translate: 0 -50%; }
+html.viewing { overflow: hidden; }
 
 /* ---------- Fuss: einfach aufgedruckt ---------- */
 .foot {
+  position: relative; z-index: 2;
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem;
-  padding: 18px var(--gut) 26px;
+  padding: 18px 0 26px;
   border-top: 1px solid rgba(242,238,230,.14);
   margin: 0 var(--gut);
   font-size: 12px; font-weight: 500; letter-spacing: .01em; color: rgba(242,238,230,.55);
-  padding-left: 0; padding-right: 0;
 }
 .foot a { text-decoration: none; }
 .foot .end { justify-self: end; }
@@ -264,11 +705,7 @@ html[data-theme="o"] { --o: #ff6600; }
   transform: rotate(-2deg);
   transition: transform .25s cubic-bezier(.2,.8,.2,1);
 }
-/* wie beim Portrait: Creme vorn, Orange versetzt dahinter */
-.foot .mid::before, .foot .mid::after {
-  content: ""; position: absolute; inset: 0;
-  background: center / 100% 100% no-repeat;
-}
+.foot .mid::before, .foot .mid::after { content: ""; position: absolute; inset: 0; background: center / 100% 100% no-repeat; }
 .foot .mid::before { z-index: -1; background-image: url(/img/paper/label-c.webp); filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
 .foot .mid::after { z-index: -2; inset: -1px -3px -2px -1px; background-image: url(/img/paper/label-y.webp); transform: translate(7px, 5px) rotate(6.5deg); filter: drop-shadow(0 3px 4px rgba(0,0,0,.45)); }
 .foot .mid:hover { color: var(--ink); transform: rotate(0deg) translateY(-2px); }
@@ -282,44 +719,53 @@ html[data-theme="o"] { --o: #ff6600; }
 .legal-body p { margin: 0 0 .9em; }
 .legal-back { display: inline-block; margin-top: 3vw; font-weight: 800; text-transform: uppercase; font-size: 13px; text-decoration: none; border-bottom: 2px solid var(--o); }
 
+/* ---------- Tablet hochkant: Pack groesser, sonst wirkt es auf dem hohen Bildschirm verloren ---------- */
+@media (min-width: 761px) and (orientation: portrait) {
+  .hero { --pw: min(50vw, 44vh, 500px); }
+  .fan-a { translate: calc(-50% - var(--pw) * .52) 0; }
+  .fan-b { translate: calc(-50% + var(--pw) * .5) calc(var(--pw) * .1); }
+}
+
 /* ---------- Schmal ---------- */
 @media (max-width: 760px) {
   :root { --gut: 16px; }
-  .hero { padding-top: 30px; }
-  .name { flex-direction: column; font-size: 20vw; line-height: .9; }
-  .name-star { width: 18vw; height: 22vw; margin: -1vw 0; }
-  .roles { font-size: 12.5px; margin-top: 30px; gap: .75em; }
-  .face { width: 84vw; margin-top: 30px; }
+  .hero { padding-top: 64px; }
+  .hero { --pw: 80vw; }
+  .hero .fan { top: calc(64px + var(--pw) * .34); }
+  .fan-a { translate: calc(-50% - var(--pw) * .34) 0; rotate: -9deg; }
+  .fan-b { translate: calc(-50% + var(--pw) * .34) calc(var(--pw) * .08); rotate: 8deg; }
+  .v-prev, .v-next { top: auto; bottom: 22px; translate: none; }
+  .v-prev { left: calc(50% - 58px); } .v-next { right: calc(50% - 58px); }
+  .strip { top: 26px; left: -16vw; width: 60vw; rotate: -11deg; }
+  .d-pack { top: 40px; right: -26vw; width: 46vw; }
+  .d-mailer { left: -30vw; width: 50vw; }
+  .d-pack2 { right: -26vw; width: 44vw; }
+  .n-acryl { right: -28vw; width: 50vw; }
   .foot { gap: .6rem; font-size: 11px; }
-  .wheat { padding-top: 56px; }
-  .poster { width: 96vw; }
+  .wheat { padding-top: 64px; }
+  .poster { width: 92vw; }
   .ransom { inset: 15% 6% 8%; }
-  .wall { padding: 0 22px 56px; }
-  .pair { grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 36px; margin-top: 56px; }
-  .pair:first-child { margin-top: 40px; }
-  .pair.tuck { margin-top: 56px; }
-  .scrap { grid-row: auto; grid-column: auto; margin-top: 0; }
-  .scrap.w { grid-column: 1 / -1; }
-  .pair:has(.w) .scrap:not(.w) { grid-column: 1 / -1; width: 66%; justify-self: center; margin-top: 0; }
-  .scrap:nth-child(2):not(.w) { margin-top: 18%; }
-  .pair.quad .scrap:not(.w) { grid-column: auto; width: auto; }
-  .pair.quad .scrap:nth-child(2) { margin-top: 18%; }
-  .print img { border-width: 6px; }
+  .wall { padding: 0 26px 64px; }
+  .pair { grid-template-columns: 1fr 1fr; column-gap: 18px; row-gap: 44px; margin-top: 64px; }
+  .pair:first-child { margin-top: 48px; }
+  .pair.tuck { margin-top: 64px; }
+  .card { grid-row: auto; grid-column: auto; margin-top: 0; }
+  .card.w { grid-column: 1 / -1; }
+  .pair:has(.w) .card:not(.w) { grid-column: 1 / -1; width: 66%; justify-self: center; margin-top: 0; }
+  .card:nth-child(2):not(.w) { margin-top: 18%; }
+  .pair.quad .card:not(.w) { grid-column: auto; width: auto; }
+  .pair.quad .card:nth-child(2) { margin-top: 18%; }
   .tape { height: 22px; min-width: 50px; border-width: 0 10px; border-image-width: 0 10px; }
   .tape.t { top: -11px; }
   .tape.tl { transform: translate(-22%, -24%) rotate(-38deg); }
   .tape.tr { transform: translate(22%, -24%) rotate(38deg); }
   .tape.tl, .tape.tr { width: 62px; min-width: 0; }
   .pair.quad + .pair { margin-top: 96px; }
-  .pair.finale { margin-top: 80px; }
-  .dogear img, .dogear .crease, .dogear .grain { clip-path: polygon(0 0, calc(100% - 44px) 0, 100% 44px, 100% 100%, 0 100%); }
-  .dogear::before { width: 76px; height: 76px; }
-  .dogear::after { width: 44px; height: 44px; }
+  .pair.finale { margin-top: 88px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ransom img { animation: none; }
 }
-
-html[data-theme="g"] .foot .mid::after { background-image: url(/img/paper/label-g.webp); }
-html[data-theme="o"] .foot .mid::after { background-image: url(/img/paper/label-o.webp); }
+/* Schaerfentiefe beim Scrollen (js/light.js setzt filter: blur): nur grosse Bildschirme mit Maus */
+.lit [data-tilt] { transition: filter .5s ease-out; }
