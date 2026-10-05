@@ -1,4 +1,6 @@
-/* nkoenig.studio V8 = V6 "Sealed" + aus V7 uebernommen: Holo-Karten faecherartig unter dem Pack,
+/* nkoenig.studio V9: V8 + Feder-Physik (js/light.js), Raytracing-Anmutung (Hoehenschatten, Lichtbrechung im Acryl,
+   Bloom, Fresnel, Kaustik) und Druckartefakte (Passer, Tonwertzuwachs, Raster, Druckfarbe auf Folie).
+   V8 = V6 "Sealed" + aus V7 uebernommen: Holo-Karten faecherartig unter dem Pack,
    irisierender Holo-Rand der seltenen Karten, Foto-Grossansicht. Kein Light Mode, keine Bildtexte.
    V6 "Sealed" — man schaut auf echte Dinge: ein aufgerissenes Folienpack, ein laminiertes
    Plakat, Karten in Huellen. Ein gemeinsames Licht (js/light.js) kippt alles leicht und wandert ueber Folie,
@@ -97,17 +99,19 @@ main { position: relative; overflow: clip; }
 }
 .booster::before {   /* Schatten auf dem Tisch */
   content: ""; position: absolute; inset: 7% 4% 2% 5%; border-radius: 8%;
-  background: rgba(0,0,0,.8); filter: blur(26px);
-  transform: translate(calc(var(--sx, -6px) * 1.6), calc(var(--sy, 10px) * 1.4 + 22px));
+  background: rgba(0,0,0,.8); filter: blur(26px); will-change: transform;
+  transform: translate(calc(var(--sx, -6px) * 1.6 * (1 + var(--lift, 0) * .5)), calc((var(--sy, 10px) * 1.4 + 22px) * (1 + var(--lift, 0) * .5) + var(--ty, 0px)));
+  scale: calc(1 + var(--lift, 0) * .035); opacity: calc(1 - var(--lift, 0) * .2);
 }
 .tilt {
-  transform: perspective(1500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(calc(var(--lift, 0) * 20px));
+  transform: perspective(1500px) translateY(var(--ty, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(calc(var(--lift, 0) * 20px));
   will-change: transform;
 }
 .booster .tilt { position: absolute; inset: 0; }
 .booster .tilt::before {  /* Kontaktschatten */
   content: ""; position: absolute; inset: 6.5% .6% .4% .6%; border-radius: 1.5%;
   background: rgba(0,0,0,.55); filter: blur(3px); transform: translate(1px, 3px);
+  opacity: clamp(0, 1 - var(--lift, 0) * .7, 1);
 }
 .booster .inner { position: absolute; inset: 0; width: 100%; height: 100%; }
 .booster .lip { position: absolute; left: 0; top: 0; width: 100%; height: 8.114%; pointer-events: none; }   /* Schatten der Risskante ins Pack */
@@ -205,10 +209,10 @@ main { position: relative; overflow: clip; }
 /* Volumen: das Pack ist aufgeblasen. Raender kippen weg (dunkler), breite Glanzflaechen folgen dem Licht */
 .front .pillow-shade { background: url(/img/seal/pillow-shade.webp) 0 0 / 100% 100%; mix-blend-mode: multiply; opacity: .7; pointer-events: none; }
 .front .pillow { background: 0 0 / 100% 100%; mix-blend-mode: screen; pointer-events: none; }
-.p-l { background-image: url(/img/seal/pillow-l.webp); opacity: calc(.25 + var(--sl, .3) * 1.1); }
-.p-r { background-image: url(/img/seal/pillow-r.webp); opacity: calc(.25 + var(--sr, 0) * 1.1); }
-.p-t { background-image: url(/img/seal/pillow-t.webp); opacity: calc(.25 + var(--st, .5) * 1.1); }
-.p-b { background-image: url(/img/seal/pillow-b.webp); opacity: calc(.25 + var(--sb, 0) * 1.1); }
+.p-l { background-image: url(/img/seal/pillow-l.webp); opacity: calc(.25 + var(--sl, .3) * 1.1 + var(--tm, 0) * .3); }
+.p-r { background-image: url(/img/seal/pillow-r.webp); opacity: calc(.25 + var(--sr, 0) * 1.1 + var(--tm, 0) * .3); }
+.p-t { background-image: url(/img/seal/pillow-t.webp); opacity: calc(.25 + var(--st, .5) * 1.1 + var(--tm, 0) * .3); }
+.p-b { background-image: url(/img/seal/pillow-b.webp); opacity: calc(.25 + var(--sb, 0) * 1.1 + var(--tm, 0) * .3); }
 
 /* Name: eine grosse, fette Grotesk-Zeile unten direkt auf die Folie gedruckt (wie bei Metall-Packs),
    leicht eingepraegt. Darunter dieselbe Zeile nur als Kontur, halb angeschnitten. */
@@ -236,6 +240,10 @@ main { position: relative; overflow: clip; }
 .face-link::after {   /* Pressung: oben links Schattenkante, unten rechts Lichtkante */
   content: ""; position: absolute; inset: 0; pointer-events: none;
   box-shadow: inset .5cqw .7cqw .9cqw rgba(0,0,0,.5), inset -.35cqw -.45cqw .6cqw rgba(255,255,255,.22), 0 0 0 .1cqw rgba(0,0,0,.55);
+}
+.face-link::before {   /* Schwarz-Raster des Drucks auf der Folie */
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: url(/img/print/rosette-k.webp) 0 0 / 16cqw; mix-blend-mode: overlay; opacity: .24;
 }
 .face-link:focus-visible { outline: 2px solid var(--chalk); outline-offset: 4px; }
 .face-link .photo { width: 100%; aspect-ratio: 1; object-fit: cover; border: 0; filter: contrast(1.06) brightness(1.01); }
@@ -285,7 +293,7 @@ main { position: relative; overflow: clip; }
   box-shadow: 0 -1px 0 rgba(255,255,255,.25) inset, 0 4px 10px rgba(0,0,0,.5);
 }
 .pk-a { left: 15%; rotate: -5deg; background: var(--card); }
-.pk-a::before { content: ""; position: absolute; inset: 1.6cqw 1.6cqw 0; border-radius: .5cqw; background: url(/img/xKY4ZHJDITA-640.webp) 30% 0 / cover; }
+.pk-a::before { content: ""; position: absolute; inset: 1.6cqw 1.6cqw 0; border-radius: .5cqw; background: url(/img/print/xKY4ZHJDITA-640.webp) 30% 0 / cover; }
 .pk-b { left: 47%; top: 1.4%; rotate: 4.5deg; --cbw: 1.6cqw; }
 
 /* Kartenrueckseite */
@@ -428,10 +436,12 @@ main { position: relative; overflow: clip; }
 /* Schatten: Karte dunkel, Huelle durchscheinend heller; Versatz folgt dem Licht */
 .card::before, .card::after {
   content: ""; position: absolute; pointer-events: none; will-change: transform;
-  transform: translate(calc(var(--sx, -6px) * var(--hgt) * (1 + var(--lift, 0))), calc((var(--sy, 10px) + 10px) * var(--hgt) * (1 + var(--lift, 0))));
+  transform: translate(calc(var(--sx, -6px) * var(--hgt) * (1 + var(--lift, 0))), calc((var(--sy, 10px) + 10px) * var(--hgt) * (1 + var(--lift, 0)) + var(--ty, 0px)));
 }
-.card::before { inset: 1.5cqw; border-radius: var(--cr); background: rgba(0,0,0,.8); filter: blur(calc(7px * var(--hgt))); }
-.card::after  { inset: var(--ci); border-radius: var(--cr); background: rgba(0,0,0,.3); filter: blur(calc(16px * var(--hgt))); }
+.card::before { inset: 1.5cqw; border-radius: var(--cr); background: rgba(0,0,0,.8); filter: blur(calc(7px * var(--hgt)));
+  opacity: clamp(.2, 1 - var(--lift, 0) * .5, 1); scale: calc(1 + var(--lift, 0) * .02); }
+.card::after  { inset: var(--ci); border-radius: var(--cr); background: rgba(0,0,0,.3); filter: blur(calc(16px * var(--hgt)));
+  opacity: clamp(.5, 1 - var(--lift, 0) * .22, 1.2); scale: calc(1 + var(--lift, 0) * .06); }
 .card.loose::after { display: none; }
 .card .tilt { position: relative; z-index: 1; }
 
@@ -444,7 +454,18 @@ main { position: relative; overflow: clip; }
   content: ""; position: absolute; inset: 0; z-index: 0;
   background: var(--fiber) 0 0 / 300px; mix-blend-mode: multiply; opacity: .35;
 }
-.zoom { display: block; position: relative; z-index: 1; cursor: zoom-in; border-radius: .8cqw; }
+/* Foto + Raster als eigene Ebene: wird einmal gerendert, Glanz und Holo darueber bewegen sich ohne es neu zu rechnen */
+.zoom, .pic { display: block; position: relative; z-index: 1; border-radius: .8cqw; will-change: transform; }
+.zoom { cursor: zoom-in; }
+.w .pic { border-radius: .6cqw; }
+/* Druckraster: Rosette aus C, M, Y, K (img/print/rosette.webp, aus tools/print.py) als Kachel. Per overlay wirkt sie
+   nur in den Mitteltoenen, Lichter und Tiefen bleiben ruhig -- wie ein echtes Raster. Passer, Zuwachs, Papier: im Bild */
+.zoom::after, .pic::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+  background: url(/img/print/rosette.webp) 0 0 / 16cqw; mix-blend-mode: overlay; opacity: 0;
+}
+.inked::after { opacity: .3; }
+.cosmos .inked::after { opacity: .2; }
 .zoom:focus-visible { outline: 2px solid var(--o); outline-offset: 3px; }
 .print img { position: relative; z-index: 1; width: 100%; border-radius: .8cqw; filter: contrast(1.03) saturate(1.02); }
 /* Hochglanz-Abzug unter Direktblitz: harter, fast weisser Punkt mit Hof */
@@ -491,6 +512,36 @@ main { position: relative; overflow: clip; }
   opacity: .95;
 }
 
+/* ---------- Licht wie gerendert ---------- */
+/* Glanzgrad je Oberflaeche: wie stark der Blitz-Hof (Bloom) ueber die Kante strahlt */
+.card { --gloss: .4; } .sleeve { --gloss: .55; } .top { --gloss: .85; } .one { --gloss: 1; } .holo { --gloss: 1; }
+.booster { --gloss: .9; } .poster { --gloss: .7; }
+/* Bloom: um den Glanzpunkt strahlt Licht ueber die Kante aufs Umfeld (wie bei einer Aufnahme mit Blitz).
+   Die Ebene ist so gross wie das Objekt und wird nur verschoben -> keine Neuberechnung, nur Compositing */
+.card .tilt::after, .booster .tilt::after, .poster .tilt::after {
+  content: ""; position: absolute; inset: 0; z-index: 8; pointer-events: none;
+  translate: calc(var(--fx, 40%) - 50%) calc(var(--fy, 30%) - 50%);
+  background: radial-gradient(circle at 50% 50%, rgba(255,250,238,.55) 0, rgba(255,246,228,.22) 4cqw, rgba(255,240,220,.07) 14cqw, transparent 30cqw);
+  mix-blend-mode: screen; opacity: calc(var(--bloom, 0) * var(--gloss)); will-change: transform, opacity;
+}
+.booster .tilt::after { translate: calc(var(--fx, 45%) - 50%) calc(var(--fy, 35%) - 73%); }
+/* Fresnel: je schraeger man auf Folie/Kunststoff schaut, desto mehr spiegelt die abgewandte Seite */
+.card .tilt::before {
+  content: ""; position: absolute; inset: var(--ci); z-index: 4; border-radius: var(--cr); pointer-events: none;
+  background: linear-gradient(calc(90deg - atan2(var(--nrx, 0), var(--nry, 0))), transparent 35%, rgba(232,240,250, calc(var(--tm, 0) * .16)));
+}
+.sleeve .tilt::before { transform: translate(var(--cdx, 0), var(--cdy, 0)) rotate(var(--ck, 0deg)); }
+/* Kaustik unter dem Acrylblock: klarer Rand laesst Licht durch, die Fase buendelt es an der fernen Ecke */
+.caustic {
+  position: absolute; z-index: 1; inset: var(--ci); border-radius: var(--cr); pointer-events: none;
+  transform: translate(calc(var(--sx, -6px) * var(--hgt) * 1.25 * (1 + var(--lift, 0))), calc((var(--sy, 10px) + 10px) * var(--hgt) * 1.25 * (1 + var(--lift, 0)) + var(--ty, 0px)));
+  box-shadow: inset 0 0 0 .35cqw rgba(255,244,222,.2), inset 0 0 3cqw .6cqw rgba(255,236,205,.06);
+  filter: blur(2.2px); mix-blend-mode: screen; will-change: transform;
+  /* Licht kommt von oben links -> die Fase buendelt es an der fernen Ecke des Schattens (statisch: kein Neuzeichnen) */
+  -webkit-mask: radial-gradient(farthest-side at 96% 98%, #000, rgba(0,0,0,.35) 45%, transparent 80%);
+  mask: radial-gradient(farthest-side at 96% 98%, #000, rgba(0,0,0,.35) 45%, transparent 80%);
+}
+
 /* Huellen */
 .case {
   position: absolute; inset: var(--ci); z-index: 3; border-radius: var(--cr); pointer-events: none;
@@ -525,7 +576,8 @@ main { position: relative; overflow: clip; }
     linear-gradient(90deg, rgba(255,255,255, calc(.08 + var(--sl, .3) * .5)), rgba(255,255,255,.02) 1.6cqw, transparent 3cqw, transparent calc(100% - 3cqw), rgba(255,255,255,.02) calc(100% - 1.6cqw), rgba(255,255,255, calc(.06 + var(--sr, 0) * .5))),
     linear-gradient(180deg, rgba(255,255,255, calc(.08 + var(--st, .5) * .4)), transparent 2.4cqw, transparent calc(100% - 2.4cqw), rgba(255,255,255, calc(.05 + var(--sb, 0) * .4))),
     rgba(190, 215, 235, .03);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), inset 0 0 0 2px rgba(0,0,0,.2), inset 0 0 0 3px rgba(255,255,255,.08);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.3), inset 0 0 0 2px rgba(0,0,0,.2), inset 0 0 0 3px rgba(255,255,255,.08),
+    inset 3px 0 2px -2px rgba(255,96,70,.22), inset -3px 0 2px -2px rgba(70,160,255,.24), inset 0 3px 2px -2px rgba(255,214,90,.14);
 }
 .top .case::after { background: url(/img/seal/scratch-a.webp) var(--so, 0 0) / 480px; opacity: .36; }
 .top .case::before {
@@ -543,7 +595,9 @@ main { position: relative; overflow: clip; }
     linear-gradient(90deg, rgba(255,255,255, calc(.12 + var(--sl, .3) * .55)), rgba(255,255,255,.04) 2.4cqw, transparent 5cqw, transparent calc(100% - 5cqw), rgba(255,255,255,.03) calc(100% - 2.4cqw), rgba(255,255,255, calc(.08 + var(--sr, 0) * .55))),
     linear-gradient(180deg, rgba(255,255,255, calc(.1 + var(--st, .5) * .45)), rgba(255,255,255,.03) 2.4cqw, transparent 5cqw, transparent calc(100% - 5cqw), rgba(255,255,255,.03) calc(100% - 2.4cqw), rgba(255,255,255, calc(.06 + var(--sb, 0) * .45))),
     rgba(200, 220, 235, .03);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 0 0 2.5px rgba(0,0,0,.22), inset 0 0 0 3.5px rgba(255,255,255,.1);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), inset 0 0 0 2.5px rgba(0,0,0,.22), inset 0 0 0 3.5px rgba(255,255,255,.1),
+    inset 4px 0 3px -2px rgba(255,90,64,.26), inset -4px 0 3px -2px rgba(64,156,255,.28),
+    inset 0 4px 3px -2px rgba(255,214,90,.16), inset 0 -4px 3px -2px rgba(150,110,255,.2);
 }
 .one .case::after { background: url(/img/seal/scratch-a.webp) var(--so, 0 0) / 560px; opacity: .4; }
 .cosmos .case::after { opacity: .2; }
@@ -553,7 +607,13 @@ main { position: relative; overflow: clip; }
 }
 .w.one .case::before { border-radius: 3.4cqw; }
 .one .case, .top .case { transform: none; }   /* starre Halter sitzen gerade, die Karte darin nicht */
-.one .print, .top .print { transform: translate(var(--cdx, 0), var(--cdy, 0)) rotate(var(--ck, 0deg)); }
+.one .print, .top .print {
+  transform: translate(calc(var(--cdx, 0px) - var(--nry, 0) * var(--thick)), calc(var(--cdy, 0px) + var(--nrx, 0) * var(--thick))) rotate(var(--ck, 0deg));
+}
+.one { --thick: 1.3cqw; }   /* Dicke des Blocks: so weit wandert die Karte darin scheinbar */
+.top { --thick: .55cqw; }
+/* Karte hat Spiel in der Huelle: rutscht beim Anfahren/Bremsen des Scrollens kurz nach */
+.sleeve .print, .top .print { translate: 0 var(--iy, 0px); }
 
 /* abgerissene Folienreste auf dem Tisch (gleiche Folie wie das Pack, scharf: Mittelgrund) */
 .scrap-foil {
@@ -602,14 +662,19 @@ main { position: relative; overflow: clip; }
 .viewer:not([open]) { display: none; }
 .viewer:focus { outline: none; }
 .viewer::backdrop { background: rgba(9,9,9,.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+/* Groesse steht vorab fest (Seitenverhaeltnis aus der Karte), damit das Foto aus der Karte heraus wachsen kann (js/viewer.js) */
 .v-img {
-  max-width: min(92vw, 1500px); max-height: 86vh; width: auto; height: auto; object-fit: contain;
+  box-sizing: content-box; aspect-ratio: var(--ar, 1.5);
+  width: min(92vw, 1500px, 86vh * var(--ar, 1.5)); height: auto; max-width: none; max-height: none; object-fit: cover;
   border: clamp(6px, .7vw, 12px) solid var(--card); border-radius: 6px;
   box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 2px 4px rgba(0,0,0,.5);
-  touch-action: pan-y pinch-zoom; user-select: none;
-  animation: v-in .35s cubic-bezier(.2,.8,.2,1);
+  touch-action: pan-y pinch-zoom; user-select: none; will-change: transform;
 }
-@keyframes v-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
+.viewer[open]::backdrop { animation: v-fade .4s ease-out; }
+.viewer[open] .v-btn { animation: v-fade .35s .12s ease-out both; }
+.viewer.closing::backdrop, .viewer.closing .v-btn { opacity: 0; transition: opacity .36s ease; }
+@keyframes v-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .viewer[open]::backdrop, .viewer[open] .v-btn { animation: none; } }
 .v-btn {
   position: fixed; width: 46px; height: 46px; border-radius: 50%; padding: 0; cursor: pointer;
   display: grid; place-items: center; border: 1px solid rgba(242,238,230,.22); background: rgba(20,20,20,.7); color: var(--chalk);

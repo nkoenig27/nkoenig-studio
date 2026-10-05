@@ -24,7 +24,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/img/seal/pack-foil.webp" as="image">
-<link rel="stylesheet" href="/css/style.css?v=95">
+<link rel="stylesheet" href="/css/style.css?v=100">
 </head>
 <body>
 <div class="lamp" aria-hidden="true"></div>
@@ -43,7 +43,13 @@
     <feGaussianBlur in="SourceAlpha" stdDeviation=".55" result="bb"/>
     <feSpecularLighting in="bb" surfaceScale="1.8" specularConstant=".7" specularExponent="42" lighting-color="#ffffff" result="sp"><feDistantLight azimuth="235" elevation="40"/></feSpecularLighting>
     <feComposite in="sp" in2="SourceAlpha" operator="in" result="spi"/>
-    <feMerge><feMergeNode in="shadow"/><feMergeNode in="hl"/><feMergeNode in="SourceGraphic"/><feMergeNode in="spi"/></feMerge>
+    <!-- Druckfarbe auf glatter Folie: Kanten laufen minimal aus, an Fehlstellen deckt sie nicht und Gold blitzt durch -->
+    <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="grain"/>
+    <feDisplacementMap in="SourceGraphic" in2="grain" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="ink"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".32" numOctaves="2" seed="9" result="n2"/>
+    <feColorMatrix in="n2" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  15 0 0 0 -10.4" result="holes"/>
+    <feComposite in="ink" in2="holes" operator="out" result="inked"/>
+    <feMerge><feMergeNode in="shadow"/><feMergeNode in="hl"/><feMergeNode in="inked"/><feMergeNode in="spi"/></feMerge>
   </filter>
   <symbol id="star" viewBox="0 0 100 100"><path d="M50 0 C53 34 66 47 100 50 C66 53 53 66 50 100 C47 66 34 53 0 50 C34 47 47 34 50 0Z"/></symbol>
 </svg>
@@ -60,10 +66,10 @@
   <!-- ===== Das Pack: Gesicht ===== -->
   <section class="hero">
     <figure class="card loose holo fan fan-a" style="--hm:url(/img/seal/holo-fritz.webp)" data-tilt aria-hidden="true">
-      <div class="tilt"><div class="print"><img src="/img/S_MXibn6oHI-640.webp" srcset="/img/S_MXibn6oHI-640.webp 640w, /img/S_MXibn6oHI-1080.webp 1080w" sizes="(max-width:760px) 54vw, 23vw" width="900" height="1350" alt=""><i class="holo-l"></i><i class="sheen"></i></div></div>
+      <div class="tilt"><div class="print"><span class="pic"><img src="/img/print/S_MXibn6oHI-640.webp" srcset="/img/print/S_MXibn6oHI-640.webp 640w, /img/print/S_MXibn6oHI-1080.webp 1080w" sizes="(max-width:760px) 54vw, 23vw" width="900" height="1350" alt=""></span><i class="holo-l"></i><i class="sheen"></i></div></div>
     </figure>
     <figure class="card loose holo fan fan-b" style="--hm:url(/img/seal/holo-cadillac.webp)" data-tilt aria-hidden="true">
-      <div class="tilt"><div class="print"><img src="/img/Gth9FScaFCk-640.webp" srcset="/img/Gth9FScaFCk-640.webp 640w, /img/Gth9FScaFCk-1080.webp 1080w" sizes="(max-width:760px) 54vw, 23vw" width="900" height="1350" alt=""><i class="holo-l"></i><i class="sheen"></i></div></div>
+      <div class="tilt"><div class="print"><span class="pic"><img src="/img/print/Gth9FScaFCk-640.webp" srcset="/img/print/Gth9FScaFCk-640.webp 640w, /img/print/Gth9FScaFCk-1080.webp 1080w" sizes="(max-width:760px) 54vw, 23vw" width="900" height="1350" alt=""></span><i class="holo-l"></i><i class="sheen"></i></div></div>
     </figure>
     <div class="strip" aria-hidden="true"><img src="/img/seal/pack-strip.webp" width="900" height="105" alt=""><i class="tint"></i><i class="curl"></i></div>
     <div class="booster" data-tilt>
@@ -81,7 +87,7 @@
           <div class="art">
             <!-- Bildfeld in die Folie gepresst, Portrait darin gedruckt -->
             <a class="face-link" href="https://unsplash.com/@nottwentyseven" rel="noopener" aria-label="Niklas König auf Unsplash">
-              <img class="photo" src="/img/niklas-1240.webp" width="1240" height="1240" fetchpriority="high" alt="Niklas König">
+              <img class="photo" src="/img/print/niklas-1240.webp" width="1240" height="1240" fetchpriority="high" alt="Niklas König">
             </a>
             <!-- rundes Holo-Siegel mit Stern, ueberlappt die Ecke des Bildfelds -->
             <i class="name-star" aria-hidden="true"><svg><use href="#star"/></svg></i>
@@ -139,7 +145,7 @@
     <div class="pair">
       <figure class="card top" style="--c:2/6;--mt:20%;--r:-1.8deg" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/svIlYNz19pQ-1600.webp"><img src="/img/svIlYNz19pQ-1080.webp" srcset="/img/svIlYNz19pQ-640.webp 640w, /img/svIlYNz19pQ-1080.webp 1080w, /img/svIlYNz19pQ-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Silhouette aus den Wörtern Liebe und Hass auf dunklem Grund"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/svIlYNz19pQ-1600.webp"><img src="/img/print/svIlYNz19pQ-1080.webp" srcset="/img/print/svIlYNz19pQ-640.webp 640w, /img/print/svIlYNz19pQ-1080.webp 1080w, /img/print/svIlYNz19pQ-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Silhouette aus den Wörtern Liebe und Hass auf dunklem Grund"></a><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
           <i class="tape masking t" style="--ti:url(/img/tape/m4.webp)"></i>
         </div>
@@ -147,7 +153,7 @@
       <figure class="card sleeve holo" style="--c:7/12;--r:2.4deg;--hm:url(/img/seal/holo-fritz.webp)" data-tilt>
         <i class="under cardback" style="--ux:7%;--uy:4%;--ur:-6deg" aria-hidden="true"></i>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/S_MXibn6oHI-1600.webp"><img src="/img/S_MXibn6oHI-1080.webp" srcset="/img/S_MXibn6oHI-640.webp 640w, /img/S_MXibn6oHI-1080.webp 1080w, /img/S_MXibn6oHI-1600.webp 1600w" sizes="(max-width:760px) 62vw, 37vw" width="900" height="1350" loading="lazy" decoding="async" alt="Schild mit der Aufschrift Frit Stop über Schachbrettmuster"></a><i class="holo-l"></i><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/S_MXibn6oHI-1600.webp"><img src="/img/print/S_MXibn6oHI-1080.webp" srcset="/img/print/S_MXibn6oHI-640.webp 640w, /img/print/S_MXibn6oHI-1080.webp 1080w, /img/print/S_MXibn6oHI-1600.webp 1600w" sizes="(max-width:760px) 62vw, 37vw" width="900" height="1350" loading="lazy" decoding="async" alt="Schild mit der Aufschrift Frit Stop über Schachbrettmuster"></a><i class="holo-l"></i><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
@@ -157,24 +163,24 @@
     <div class="pair quad">
       <figure class="card loose w" style="--c:1/9;--r:1deg" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/wWiVD-IsDns-1600.webp"><img src="/img/wWiVD-IsDns-1080.webp" srcset="/img/wWiVD-IsDns-640.webp 640w, /img/wWiVD-IsDns-1080.webp 1080w, /img/wWiVD-IsDns-1600.webp 1600w" sizes="(max-width:760px) 100vw, 59vw" width="900" height="675" loading="lazy" decoding="async" alt="Blaue Armbanduhr mit Metallarmband"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/wWiVD-IsDns-1600.webp"><img src="/img/print/wWiVD-IsDns-1080.webp" srcset="/img/print/wWiVD-IsDns-640.webp 640w, /img/print/wWiVD-IsDns-1080.webp 1080w, /img/print/wWiVD-IsDns-1600.webp 1600w" sizes="(max-width:760px) 100vw, 59vw" width="900" height="675" loading="lazy" decoding="async" alt="Blaue Armbanduhr mit Metallarmband"></a><i class="sheen"></i></div>
         </div>
       </figure>
       <figure class="card sleeve" style="--c:9/13;--mt:9%;--r:2.2deg" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/lqy07Ffdkoc-1600.webp"><img src="/img/lqy07Ffdkoc-1080.webp" srcset="/img/lqy07Ffdkoc-640.webp 640w, /img/lqy07Ffdkoc-1080.webp 1080w, /img/lqy07Ffdkoc-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1200" loading="lazy" decoding="async" alt="Tonbandgerät mit Spulen"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/lqy07Ffdkoc-1600.webp"><img src="/img/print/lqy07Ffdkoc-1080.webp" srcset="/img/print/lqy07Ffdkoc-640.webp 640w, /img/print/lqy07Ffdkoc-1080.webp 1080w, /img/print/lqy07Ffdkoc-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1200" loading="lazy" decoding="async" alt="Tonbandgerät mit Spulen"></a><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
       <figure class="card one" style="--c:2/6;--row:2;--mt:7%;--r:-2.4deg" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/yNxP-sdPEx0-1600.webp"><img src="/img/yNxP-sdPEx0-1080.webp" srcset="/img/yNxP-sdPEx0-640.webp 640w, /img/yNxP-sdPEx0-1080.webp 1080w, /img/yNxP-sdPEx0-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Flugzeugpropeller im Gegenlicht, schwarzweiß"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/yNxP-sdPEx0-1600.webp"><img src="/img/print/yNxP-sdPEx0-1080.webp" srcset="/img/print/yNxP-sdPEx0-640.webp 640w, /img/print/yNxP-sdPEx0-1080.webp 1080w, /img/print/yNxP-sdPEx0-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Flugzeugpropeller im Gegenlicht, schwarzweiß"></a><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
       <figure class="card sleeve w" style="--c:7/12;--row:2;--mt:-5%;--r:-3deg;--z:2" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/iYcURjI3aZ8-1600.webp"><img src="/img/iYcURjI3aZ8-1080.webp" srcset="/img/iYcURjI3aZ8-640.webp 640w, /img/iYcURjI3aZ8-1080.webp 1080w, /img/iYcURjI3aZ8-1600.webp 1600w" sizes="(max-width:760px) 100vw, 37vw" width="900" height="675" loading="lazy" decoding="async" alt="Euromünze mit Eule auf schwarzem Grund"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/iYcURjI3aZ8-1600.webp"><img src="/img/print/iYcURjI3aZ8-1080.webp" srcset="/img/print/iYcURjI3aZ8-640.webp 640w, /img/print/iYcURjI3aZ8-1080.webp 1080w, /img/print/iYcURjI3aZ8-1600.webp 1600w" sizes="(max-width:760px) 100vw, 37vw" width="900" height="675" loading="lazy" decoding="async" alt="Euromünze mit Eule auf schwarzem Grund"></a><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
@@ -186,12 +192,12 @@
       <figure class="card loose" style="--c:1/7;--r:-2deg" data-tilt>
         <i class="under cardback" style="--ux:-6%;--uy:5%;--ur:-4deg" aria-hidden="true"></i>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/kGuBcBm0E1g-1600.webp"><img src="/img/kGuBcBm0E1g-1080.webp" srcset="/img/kGuBcBm0E1g-640.webp 640w, /img/kGuBcBm0E1g-1080.webp 1080w, /img/kGuBcBm0E1g-1600.webp 1600w" sizes="(max-width:760px) 62vw, 44vw" width="900" height="1200" loading="lazy" decoding="async" alt="Rotes Mustang-Cabrio neben einem grauen Auto"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/kGuBcBm0E1g-1600.webp"><img src="/img/print/kGuBcBm0E1g-1080.webp" srcset="/img/print/kGuBcBm0E1g-640.webp 640w, /img/print/kGuBcBm0E1g-1080.webp 1080w, /img/print/kGuBcBm0E1g-1600.webp 1600w" sizes="(max-width:760px) 62vw, 44vw" width="900" height="1200" loading="lazy" decoding="async" alt="Rotes Mustang-Cabrio neben einem grauen Auto"></a><i class="sheen"></i></div>
         </div>
       </figure>
       <figure class="card top holo" style="--c:8/12;--mt:4%;--r:2.4deg;--hm:url(/img/seal/holo-cadillac.webp)" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/Gth9FScaFCk-1600.webp"><img src="/img/Gth9FScaFCk-1080.webp" srcset="/img/Gth9FScaFCk-640.webp 640w, /img/Gth9FScaFCk-1080.webp 1080w, /img/Gth9FScaFCk-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Cadillac-Heckflosse"></a><i class="holo-l"></i><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/Gth9FScaFCk-1600.webp"><img src="/img/print/Gth9FScaFCk-1080.webp" srcset="/img/print/Gth9FScaFCk-640.webp 640w, /img/print/Gth9FScaFCk-1080.webp 1080w, /img/print/Gth9FScaFCk-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Cadillac-Heckflosse"></a><i class="holo-l"></i><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
@@ -201,14 +207,14 @@
     <div class="pair">
       <figure class="card sleeve" style="--c:2/5;--r:1.6deg" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/XPmTnY4AHtk-1600.webp"><img src="/img/XPmTnY4AHtk-1080.webp" srcset="/img/XPmTnY4AHtk-640.webp 640w, /img/XPmTnY4AHtk-1080.webp 1080w, /img/XPmTnY4AHtk-1600.webp 1600w" sizes="(max-width:760px) 62vw, 22vw" width="900" height="1600" loading="lazy" decoding="async" alt="Tauben auf einem Betondach vor blauem Himmel"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/XPmTnY4AHtk-1600.webp"><img src="/img/print/XPmTnY4AHtk-1080.webp" srcset="/img/print/XPmTnY4AHtk-640.webp 640w, /img/print/XPmTnY4AHtk-1080.webp 1080w, /img/print/XPmTnY4AHtk-1600.webp 1600w" sizes="(max-width:760px) 62vw, 22vw" width="900" height="1600" loading="lazy" decoding="async" alt="Tauben auf einem Betondach vor blauem Himmel"></a><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
       <figure class="card loose" style="--c:6/12;--mt:12%;--r:-1.6deg" data-tilt>
         <i class="under cardback" style="--ux:5%;--uy:-4%;--ur:3deg" aria-hidden="true"></i>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/qIIUsbRZCtw-1600.webp"><img src="/img/qIIUsbRZCtw-1080.webp" srcset="/img/qIIUsbRZCtw-640.webp 640w, /img/qIIUsbRZCtw-1080.webp 1080w, /img/qIIUsbRZCtw-1600.webp 1600w" sizes="(max-width:760px) 62vw, 44vw" width="900" height="1200" loading="lazy" decoding="async" alt="Wohnhaus mit roten und weißen Balkonen"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/qIIUsbRZCtw-1600.webp"><img src="/img/print/qIIUsbRZCtw-1080.webp" srcset="/img/print/qIIUsbRZCtw-640.webp 640w, /img/print/qIIUsbRZCtw-1080.webp 1080w, /img/print/qIIUsbRZCtw-1600.webp 1600w" sizes="(max-width:760px) 62vw, 44vw" width="900" height="1200" loading="lazy" decoding="async" alt="Wohnhaus mit roten und weißen Balkonen"></a><i class="sheen"></i></div>
         </div>
       </figure>
     </div>
@@ -217,13 +223,13 @@
     <div class="pair tuck">
       <figure class="card one" style="--c:2/6;--r:-2deg" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/wElIrmSa0AU-1600.webp"><img src="/img/wElIrmSa0AU-1080.webp" srcset="/img/wElIrmSa0AU-640.webp 640w, /img/wElIrmSa0AU-1080.webp 1080w, /img/wElIrmSa0AU-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Gelbe Boje spiegelt sich im ruhigen See"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/wElIrmSa0AU-1600.webp"><img src="/img/print/wElIrmSa0AU-1080.webp" srcset="/img/print/wElIrmSa0AU-640.webp 640w, /img/print/wElIrmSa0AU-1080.webp 1080w, /img/print/wElIrmSa0AU-1600.webp 1600w" sizes="(max-width:760px) 62vw, 29vw" width="900" height="1350" loading="lazy" decoding="async" alt="Gelbe Boje spiegelt sich im ruhigen See"></a><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
       <figure class="card sleeve w" style="--c:7/13;--mt:21%;--r:1.4deg" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/tongwU50wgE-1600.webp"><img src="/img/tongwU50wgE-1080.webp" srcset="/img/tongwU50wgE-640.webp 640w, /img/tongwU50wgE-1080.webp 1080w, /img/tongwU50wgE-1600.webp 1600w" sizes="(max-width:760px) 100vw, 44vw" width="900" height="600" loading="lazy" decoding="async" alt="Steg mit Leiter und Tauchverbotsschild am See"></a><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/tongwU50wgE-1600.webp"><img src="/img/print/tongwU50wgE-1080.webp" srcset="/img/print/tongwU50wgE-640.webp 640w, /img/print/tongwU50wgE-1080.webp 1080w, /img/print/tongwU50wgE-1600.webp 1600w" sizes="(max-width:760px) 100vw, 44vw" width="900" height="600" loading="lazy" decoding="async" alt="Steg mit Leiter und Tauchverbotsschild am See"></a><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
           <i class="tape masking tl" style="--ti:url(/img/tape/m3.webp)"></i><i class="tape masking tr" style="--ti:url(/img/tape/m2.webp)"></i>
         </div>
@@ -235,7 +241,7 @@
       <div class="scrap-foil flip" style="--x:70%;--y:-8%;--w:26%;--rot:-12deg" aria-hidden="true"><img src="/img/seal/pack-strip.webp" width="900" height="105" alt=""><i class="tint"></i></div>
       <figure class="card one holo cosmos w" style="--c:2/12;--r:-1deg;--hm:url(/img/seal/holo-milky.webp)" data-tilt>
         <div class="tilt">
-          <div class="print"><a class="zoom" href="/img/xKY4ZHJDITA-2100.webp"><img src="/img/xKY4ZHJDITA-1080.webp" srcset="/img/xKY4ZHJDITA-640.webp 640w, /img/xKY4ZHJDITA-1080.webp 1080w, /img/xKY4ZHJDITA-1600.webp 1600w, /img/xKY4ZHJDITA-2100.webp 2100w" sizes="(max-width:760px) 100vw, 73vw" width="900" height="600" loading="lazy" decoding="async" alt="Milchstraße über Waldbäumen"></a><i class="holo-l"></i><i class="glitter"></i><i class="sheen"></i></div>
+          <div class="print"><a class="zoom" href="/img/xKY4ZHJDITA-2100.webp"><img src="/img/print/xKY4ZHJDITA-1080.webp" srcset="/img/print/xKY4ZHJDITA-640.webp 640w, /img/print/xKY4ZHJDITA-1080.webp 1080w, /img/print/xKY4ZHJDITA-1600.webp 1600w, /img/print/xKY4ZHJDITA-2100.webp 2100w" sizes="(max-width:760px) 100vw, 73vw" width="900" height="600" loading="lazy" decoding="async" alt="Milchstraße über Waldbäumen"></a><i class="holo-l"></i><i class="glitter"></i><i class="sheen"></i></div>
           <i class="case" aria-hidden="true"></i>
         </div>
       </figure>
@@ -264,7 +270,7 @@ document.getElementById('y').textContent = new Date().getFullYear();
   <button class="v-btn v-prev" type="button" aria-label="Vorheriges Foto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4l-8 8 8 8"/></svg></button>
   <button class="v-btn v-next" type="button" aria-label="Nächstes Foto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4l8 8-8 8"/></svg></button>
 </dialog>
-<script src="/js/light.js?v=90" defer></script>
-<script src="/js/viewer.js?v=81" defer></script>
+<script src="/js/light.js?v=92" defer></script>
+<script src="/js/viewer.js?v=90" defer></script>
 </body>
 </html>
