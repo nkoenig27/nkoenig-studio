@@ -104,7 +104,7 @@ main { position: relative; overflow: clip; }
   scale: calc(1 + var(--lift, 0) * .035); opacity: calc(1 - var(--lift, 0) * .2);
 }
 .tilt {
-  transform: perspective(1500px) translateY(var(--ty, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(calc(var(--lift, 0) * 20px));
+  transform: perspective(var(--persp, 1500px)) translateY(var(--ty, 0px)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(calc(var(--lift, 0) * 20px));
   will-change: transform;
 }
 .booster .tilt { position: absolute; inset: 0; }
@@ -457,6 +457,7 @@ main { position: relative; overflow: clip; }
 /* Foto + Raster als eigene Ebene: wird einmal gerendert, Glanz und Holo darueber bewegen sich ohne es neu zu rechnen */
 .zoom, .pic { display: block; position: relative; z-index: 1; border-radius: .8cqw; will-change: transform; }
 .zoom { cursor: zoom-in; }
+.zoom, .face-link, .booster { -webkit-tap-highlight-color: transparent; }   /* kein grauer Kasten beim Antippen (iOS) */
 .w .pic { border-radius: .6cqw; }
 /* Druckraster: Rosette aus C, M, Y, K (img/print/rosette.webp, aus tools/print.py) als Kachel. Per overlay wirkt sie
    nur in den Mitteltoenen, Lichter und Tiefen bleiben ruhig -- wie ein echtes Raster. Passer, Zuwachs, Papier: im Bild */
@@ -472,7 +473,7 @@ main { position: relative; overflow: clip; }
 .print::after {
   content: ""; position: absolute; inset: 0; z-index: 5; pointer-events: none; border-radius: inherit;
   background:
-    radial-gradient(circle at var(--fx, 40%) var(--fy, 30%), rgba(255,255,255,.97) 0, rgba(255,255,255,.75) 1.5cqw, rgba(255,255,255,.26) 5.5cqw, rgba(255,255,255,.07) 12cqw, transparent 22cqw),
+    radial-gradient(circle at var(--fx, 40%) var(--fy, 30%), rgba(255,255,255,.97) 0, rgba(255,255,255,.75) var(--core, 1.5cqw), rgba(255,255,255,.26) 5.5cqw, rgba(255,255,255,.07) 12cqw, transparent 22cqw),
     radial-gradient(ellipse 70% 50% at var(--fx, 40%) var(--fy, 30%), rgba(255,255,255,.12), transparent 70%),
     linear-gradient(var(--sa, 114deg), transparent 0 42%, rgba(255,255,255,.1) 46.5%, rgba(255,255,255,.03) 49.5%, transparent 54%) var(--hx, 40%) 0 / 300% 100% no-repeat;
 }
@@ -753,7 +754,7 @@ html.viewing { overflow: hidden; }
   .card.w { grid-column: 1 / -1; }
   .pair:has(.w) .card:not(.w) { grid-column: 1 / -1; width: 66%; justify-self: center; margin-top: 0; }
   .card:nth-child(2):not(.w) { margin-top: 18%; }
-  .pair.quad .card:not(.w) { grid-column: auto; width: auto; }
+  .pair.quad .card:not(.w) { grid-column: auto; width: auto; justify-self: stretch; }   /* sonst 0x0: Breite haengt am Bild, das Bild an der Breite */
   .pair.quad .card:nth-child(2) { margin-top: 18%; }
   .tape { height: 22px; min-width: 50px; border-width: 0 10px; border-image-width: 0 10px; }
   .tape.t { top: -11px; }
@@ -769,3 +770,14 @@ html.viewing { overflow: hidden; }
 }
 /* Schaerfentiefe beim Scrollen (js/light.js setzt filter: blur): nur grosse Bildschirme mit Maus */
 .lit [data-tilt] { transition: filter .5s ease-out; }
+
+/* ---------- Handy/Tablet (Touch): "unter der Lampe" (js/light.js) ----------
+   Perspektive an die Objektgroesse koppeln: eine 160-px-Karte bekaeme mit festen 1500 px nur halb so viel Raumwirkung wie
+   eine Desktop-Karte. Blitzkern mit Mindestgroesse, damit er auf kleinen Karten nicht zu einem Pixel schrumpft.
+   Dicke Halter zeigen mehr Tiefe, weil die Kamera auf dem Handy beim Scrollen schraeg hineinsieht. */
+@media (hover: none) and (pointer: coarse) {
+  [data-tilt] { --persp: 420cqw; }
+  .print { --core: max(1.5cqw, 4px); }
+  .one { --thick: 1.6cqw; }
+  .top { --thick: .7cqw; }
+}
