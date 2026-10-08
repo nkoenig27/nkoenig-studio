@@ -1,6 +1,7 @@
 // nkoenig.studio V9 — ein Licht und eine Physik fuer alle Objekte.
 // Jedes Objekt haengt an gedaempften Federn, Masse und Steifigkeit je Material: Kippen, Heben, Nachschwingen.
-// Ohne Zutun wandert das Licht langsam. Beim Scrollen bleiben die Dinge mit Traegheit kurz zurueck,
+// Ohne Zutun wandert das Licht langsam (30 Updates/s); Eingaben folgen der Displayfrequenz.
+// Beim Scrollen bleiben die Dinge mit Traegheit kurz zurueck,
 // kippen im Fahrtwind und schwingen nach, Karten rutschen in ihren Huellen. Maus kippt und hebt,
 // Druecken (Maus oder Finger) drueckt sie auf den Tisch. Lagesensor (Android) kippt zusaetzlich.
 // Schreibt pro Objekt nur CSS-Variablen (und nur, wenn sie sich aendern); alles Sichtbare passiert in style.css.
@@ -15,12 +16,12 @@
   // Material: w = Eigenfrequenz in rad/s (steifer = schneller), z = Daempfung (< 1 schwingt nach),
   // lag = wie stark es beim Anfahren/Bremsen des Scrollens zurueckbleibt, slide = Karte rutscht in der Huelle
   const MAT = {
-    booster: { w: 7.5, z: .36, lag: 1.1, slide: 0 },    // aufgeblasene Folie: weich, wippt nach
-    poster:  { w: 5.5, z: .6,  lag: .7,  slide: 0 },    // laminiert, schwer
-    one:     { w: 6,   z: .56, lag: .8,  slide: 0 },    // dicker Acrylblock, Karte sitzt fest
-    top:     { w: 8,   z: .44, lag: 1,   slide: .6 },   // Toploader: Karte hat etwas Spiel
-    sleeve:  { w: 9.5, z: .34, lag: 1.2, slide: 1 },    // Penny Sleeve: leicht, flattert, Karte rutscht
-    loose:   { w: 10,  z: .3,  lag: 1.3, slide: 0 },    // lose Karte
+    booster: { w: 11, z: .72, lag: .9, slide: 0 },
+    poster:  { w: 8, z: .85, lag: .5, slide: 0 },
+    one:     { w: 9, z: .82, lag: .6, slide: 0 },
+    top:     { w: 12, z: .76, lag: .8, slide: .5 },
+    sleeve:  { w: 13, z: .72, lag: 1, slide: .8 },
+    loose:   { w: 13, z: .7, lag: 1, slide: 0 },
   };
   const matOf = (el) => {
     const c = el.classList;
@@ -32,14 +33,17 @@
   objs.forEach((el, i) => state.set(el, {
     rx: 0, vrx: 0, ry: 0, vry: 0, lift: 0, vlift: 0, ty: 0, vty: 0, iy: 0, viy: 0,
     ph: i * 1.7 + .4, flat: el.hasAttribute('data-flat'), booster: el.classList.contains('booster'),
-    m: matOf(el), press: false, c: {},
+    m: matOf(el), press: false, fan: el.classList.contains('fan'), rect: null, c: {},
   }));
 
-  // gedaempfte Feder, semi-implizit integriert (bleibt auch bei ruckelnden Frames stabil)
+  // Kleine Integrationsschritte: dieselbe Daempfung auch nach einem langsamen Frame.
   const spring = (s, k, target, w, z, dt, force = 0) => {
     const v = 'v' + k;
-    s[v] += (-w * w * (s[k] - target) - 2 * z * w * s[v] + force) * dt;
-    s[k] += s[v] * dt;
+    const steps = Math.ceil(dt * 120), h = dt / steps;
+    for (let n = 0; n < steps; n++) {
+      s[v] += (-w * w * (s[k] - target) - 2 * z * w * s[v] + force) * h;
+      s[k] += s[v] * h;
+    }
   };
   // CSS-Variable nur schreiben, wenn sich der Wert wirklich aendert (spart Stil-Neuberechnung)
   const put = (el, c, k, v) => { if (c[k] !== v) { c[k] = v; el.style.setProperty(k, v); } };
@@ -72,24 +76,62 @@
     el.insertBefore(k, el.querySelector('.tilt'));
   });
 
-  const vis = new Set();
-  const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? vis.add(e.target) : vis.delete(e.target))), { rootMargin: '20% 0px' });
+  let layoutDirty = true;
+  const invalidate = () => { layoutDirty = true; };
+  const ro = new ResizeObserver(invalidate);
+  objs.forEach((el) => ro.observe(el));
+  ro.observe(document.body);
+  addEventListener('resize', invalidate, { passive: true });
+  document.fonts?.ready.then(invalidate);
+  const vis = new Set(), visibleDepth = new Set();
+  const io = new IntersectionObserver((es) => {
+    for (const e of es) {
+      const s = state.get(e.target), set = s ? vis : visibleDepth;
+      if (e.isIntersecting) {
+        set.add(e.target);
+        if (s) s.rect = null;
+        else {
+          const d = depth.find((item) => item.el === e.target);
+          d.y = scrollY * d.k;
+        }
+      } else {
+        set.delete(e.target);
+        if (s) { s.press = false; if (hover === e.target) hover = null; }
+      }
+      e.target.classList.toggle('motion-visible', e.isIntersecting);
+    }
+    start();
+  }, { rootMargin: '15% 0px' });
   objs.forEach((el) => io.observe(el));
+  depth.forEach((d) => io.observe(d.el));
 
-  let mx = 0, my = 0, mouse = false, hover = null, cx = 0, cy = 0;
+  let mx = 0, my = 0, mouse = false, hover = null, cx = 0, cy = 0, touchStart = null;
+  let activeUntil = 0;
+  const interact = () => { activeUntil = performance.now() + 700; };
+  addEventListener('scroll', interact, { passive: true });
   addEventListener('pointermove', (e) => {
     cx = e.clientX; cy = e.clientY;
+    if (touchStart && Math.hypot(cx - touchStart.x, cy - touchStart.y) > 8) release();
     if (e.pointerType !== 'mouse') return;
     mouse = true; mx = cx / innerWidth * 2 - 1; my = cy / innerHeight * 2 - 1;
+    hover = e.target.closest?.('[data-tilt]') || null;
+    interact();
   }, { passive: true });
-  document.addEventListener('pointerleave', () => { mouse = false; hover = null; });
+  document.addEventListener('pointerleave', () => { mouse = false; hover = null; interact(); });
   objs.forEach((el) => {
-    el.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hover = el; });
-    el.addEventListener('pointerleave', () => { if (hover === el) hover = null; });
+    el.addEventListener('pointerenter', (e) => {
+      if (e.pointerType === 'mouse') { hover = el; mouse = true; cx = e.clientX; cy = e.clientY; interact(); }
+    });
+    el.addEventListener('pointerleave', () => { if (hover === el) { hover = null; interact(); } });
     // Druecken: Objekt geht auf den Tisch, beim Loslassen federt es mit Ueberschwingen zurueck
-    el.addEventListener('pointerdown', (e) => { if (e.button === 0) { state.get(el).press = true; cx = e.clientX; cy = e.clientY; } }, { passive: true });
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || !e.isPrimary) return;
+      state.get(el).press = true; cx = e.clientX; cy = e.clientY;
+      if (e.pointerType === 'touch') touchStart = { x: cx, y: cy };
+      interact();
+    }, { passive: true });
   });
-  const release = () => objs.forEach((el) => { state.get(el).press = false; });
+  const release = () => { touchStart = null; objs.forEach((el) => { state.get(el).press = false; }); interact(); };
   addEventListener('pointerup', release, { passive: true });
   addEventListener('pointercancel', release, { passive: true });
   addEventListener('blur', release);
@@ -98,17 +140,23 @@
   addEventListener('deviceorientation', (e) => {
     if (e.beta == null || e.gamma == null) return;
     gyro = true; gx = clamp(e.gamma / 28); gy = clamp((e.beta - 45) / 28);
+    interact();
   }, { passive: true });
 
   // Licht und Scroll-Traegheit
   const L = { x: -.32, vx: 0, y: -.5, vy: 0 };
   let lastY = scrollY, vs = 0, acc = 0;
-  let t0 = 0, tp = 0;
+  let sceneTime = 0, tp = null, raf = 0;
 
   function frame(now) {
-    if (!t0) t0 = tp = now;
-    const dt = Math.min(.034, Math.max(.001, (now - tp) / 1000)); tp = now;
-    const t = (now - t0) / 1000;
+    raf = 0;
+    // Eingaben folgen der Displayfrequenz; langsames Ruhelicht benoetigt nur 30 Updates/s.
+    if (tp != null && now > activeUntil && now - tp < 1000 / 30 - 1) {
+      raf = requestAnimationFrame(frame); return;
+    }
+    const dt = tp == null ? 1 / 60 : Math.min(.08, Math.max(.001, (now - tp) / 1000)); tp = now;
+    sceneTime += dt;
+    const t = sceneTime;
     const W = innerWidth, H = innerHeight;
 
     // Scrollgeschwindigkeit (px/s, geglaettet) und ihre Aenderung = Beschleunigung, die alle Objekte spueren
@@ -120,38 +168,48 @@
     acc = clamp((vs - vs0) / dt, -40000, 40000);
 
     // globales Licht: oben links, wandert langsam; Maus/Lage ziehen es weich mit (Feder, kritisch gedaempft)
-    const tlx = -.32 + Math.sin(t * .11) * .3 + (mouse ? mx * .45 : 0) + (gyro ? gx * .5 : 0);
-    const tly = -.5 + Math.cos(t * .083) * .18 + (mouse ? my * .3 : 0) + (gyro ? gy * .35 : 0);
-    spring(L, 'x', tlx, 3.2, 1, dt); spring(L, 'y', tly, 3.2, 1, dt);
+    const tlx = -.32 + Math.sin(t * .11) * .16 + (mouse ? mx * .45 : 0) + (gyro ? gx * .5 : 0);
+    const tly = -.5 + Math.cos(t * .083) * .09 + (mouse ? my * .3 : 0) + (gyro ? gy * .35 : 0);
+    const lightSpeed = mouse || gyro ? 9 : 4;
+    spring(L, 'x', tlx, lightSpeed, 1, dt); spring(L, 'y', tly, lightSpeed, 1, dt);
     const lx = L.x, ly = L.y;
 
     const reads = [];
-    for (const el of vis) reads.push([el, el.getBoundingClientRect()]);
+    // Aussenkonturen bleiben beim Kippen stabil. Layout nur nach Groessenaenderungen lesen.
+    for (const el of vis) {
+      const s = state.get(el);
+      if (layoutDirty || !s.rect) {
+        const r = el.getBoundingClientRect();
+        s.rect = { left: r.left, top: r.top + y, width: r.width, height: r.height };
+      }
+      reads.push([el, { ...s.rect, top: s.rect.top - y }]);
+    }
+    layoutDirty = false;
     for (const [el, r] of reads) {
       const s = state.get(el), m = s.m, c = s.c;
       const py = clamp((r.top + r.height / 2) / H * 2 - 1, -1.4, 1.4);
       const px = clamp((r.left + r.width / 2) / W * 2 - 1);
-      const amp = s.flat ? .45 : 1;
+      const amp = (s.flat ? .45 : s.fan ? .55 : 1) * (focus.matches ? 1 : .7);
       // Ruhelage: Tisch, an dem man vorbeigeht + leichtes Atmen + Fahrtwind beim Scrollen
-      let trx = (-py * 5 + Math.sin(t * .37 + s.ph) * 1.1 + clamp(vs * .0021, -5.5, 5.5)) * amp;
-      let try_ = (Math.sin(t * .29 + s.ph * 1.7) * 1.8 + px * 2.5) * amp;
+      let trx = (-py * 3 + Math.sin(t * .37 + s.ph) * .22 + clamp(vs * .0013, -3, 3)) * amp;
+      let try_ = (Math.sin(t * .29 + s.ph * 1.7) * .35 + px * 1.5) * amp;
       let tl = 0, w = m.w, z = m.z;
       const pointed = (hover === el && mouse) || s.press;
       if (pointed) {
         const ux = clamp((cx - r.left) / r.width * 2 - 1), uy = clamp((cy - r.top) / r.height * 2 - 1);
-        trx = -uy * 9 * amp; try_ = ux * 11 * amp; tl = 1;
-        w *= 1.35;   // unter der Hand folgt es schneller
+        trx = -uy * 7 * amp; try_ = ux * 9 * amp; tl = .75;
+        w = Math.max(18, w * 1.65); z = .86;
       } else if (gyro) {
         trx += -gy * 6 * amp; try_ += gx * 7 * amp;
       }
-      if (s.press) tl = -.55;
+      if (s.press) tl = -.3;
       spring(s, 'rx', trx, w, z, dt);
       spring(s, 'ry', try_, w, z, dt);
       spring(s, 'lift', tl, w * 1.15, z, dt);
       // Traegheit: beim Anfahren bleibt es zurueck, beim Bremsen schiesst es kurz weiter
-      spring(s, 'ty', 0, w * .8, z, dt, acc * .03 * m.lag);
-      s.ty = clamp(s.ty, -26, 26);
-      if (m.slide) { spring(s, 'iy', 0, w * .55, .28, dt, acc * .012 * m.slide); s.iy = clamp(s.iy, -4, 4); }
+      spring(s, 'ty', 0, m.w, m.z, dt, acc * .012 * m.lag);
+      s.ty = clamp(s.ty, -14, 14);
+      if (m.slide) { spring(s, 'iy', 0, m.w * .7, .65, dt, acc * .005 * m.slide); s.iy = clamp(s.iy, -2, 2); }
 
       // Licht relativ zur gekippten Flaeche
       const rlx = clamp(lx + s.ry / 16), rly = clamp(ly - s.rx / 16);
@@ -186,14 +244,16 @@
       put(el, c, '--sr', Math.max(0, rlx).toFixed(3));
       put(el, c, '--st', Math.max(0, -rly).toFixed(3));
       put(el, c, '--sb', Math.max(0, rly).toFixed(3));
-      // Schaerfentiefe: Fokusebene in Bildschirmmitte, zum Rand hin leicht unscharf (in 0.5-px-Stufen)
-      const dof = Math.round(Math.max(0, Math.abs(py) - .62) * 4.6) / 2;
-      if (focus.matches && dof !== s.dof) { s.dof = dof; el.style.filter = dof ? `blur(${dof}px)` : ''; }
+      // Beim Betrachten immer scharf; nur schnelle Scrollbewegung bekommt leichte Bewegungsunschaerfe.
+      const dof = focus.matches && !pointed && !s.booster && !s.flat && !s.fan
+        ? Math.round(clamp((Math.abs(vs) - 500) / 2500, 0, 1) * 4) / 4 : 0;
+      if (dof !== s.dof) { s.dof = dof; el.style.filter = dof ? `blur(${dof}px)` : ''; }
     }
 
     // Tiefenebenen folgen dem Scrollen weich nach (schwimmen leicht hinterher)
     const ky = 1 - Math.exp(-dt * 7);
     for (const d of depth) {
+      if (!visibleDepth.has(d.el)) continue;
       const target = y * d.k;
       d.y = d.y == null ? target : d.y + (target - d.y) * ky;
       const v = d.y.toFixed(1);
@@ -202,12 +262,36 @@
     raf = requestAnimationFrame(frame);
   }
 
-  let raf = 0;
   const start = () => {
-    cancelAnimationFrame(raf);
-    if (!still.matches) { root.classList.add('lit'); t0 = 0; lastY = scrollY; raf = requestAnimationFrame(frame); }
-    else root.classList.remove('lit');
+    const enabled = !still.matches;
+    const running = enabled && !document.hidden && !root.classList.contains('viewing') && (vis.size || visibleDepth.size);
+    root.classList.toggle('lit', enabled);
+    root.classList.toggle('scene-paused', !running);
+    if (!running) {
+      cancelAnimationFrame(raf); raf = 0; tp = null;
+      release(); mouse = false; hover = null;
+      for (const [el, s] of state) {
+        s.vrx = s.vry = s.vlift = s.vty = s.viy = 0;
+        if (!enabled) {
+          s.rx = s.ry = s.lift = s.ty = s.iy = 0;
+          for (const k of Object.keys(s.c)) el.style.removeProperty(k);
+          s.c = {}; el.style.filter = ''; s.dof = 0;
+        }
+      }
+      if (!enabled) for (const d of depth) {
+        d.y = null; d.v = null; d.el.style.transform = '';
+      }
+    } else if (!raf) {
+      tp = null; lastY = scrollY; vs = acc = 0; layoutDirty = true;
+      raf = requestAnimationFrame(frame);
+    }
   };
+  const resetInput = () => { mouse = false; hover = null; release(); };
+  addEventListener('blur', resetInput);
+  addEventListener('resize', resetInput, { passive: true });
+  document.addEventListener('visibilitychange', start);
+  document.addEventListener('scenechange', start);
+  focus.addEventListener?.('change', () => { invalidate(); interact(); });
   still.addEventListener?.('change', start);
   start();
 })();
